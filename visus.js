@@ -88,5 +88,25 @@ const arbre = {
   }
 };
 
-window.VISUS = { liste, arbre };
+
+/* ——— ハッシュ（チェーン法）: H[k] = première node du compartiment k, D/P = nodes ——— */
+const hachage = {
+  construire(el) { el.innerHTML = `<div class="lst"><div class="hc"></div><table class="lst-mem"></table></div>`; },
+  maj(el, st, prev, algo, L) {
+    const { H, D, P } = st.tabs, v = st.v;
+    const noeud = i => `<div class="lst-n ${etat(st, prev, i, ["D", "P"])}${st.trouve.includes(i) ? " trouve" : ""}"><span class="lst-i">[${i}]</span>
+      <div class="lst-box"><span class="lst-d">${esc(D[i])}</span><span class="lst-p">${esc(P[i])}</span></div>
+      <div class="drapeaux">${drapeaux(algo, v, i)}</div></div>`;
+    el.querySelector(".hc").innerHTML = H.map((tete, k) => {
+      const ch = [], vu = new Set();
+      for (let i = tete; i !== -1 && i !== null && !vu.has(i) && ch.length < 10; i = P[i]) { ch.push(i); vu.add(i); }
+      const chg = prev && prev.tabs.H[k] !== tete ? " ecrit" : "";
+      return `<div class="hc-ligne${v.K === k ? " actif" : ""}"><span class="hc-k${chg}">H[${k}]</span><span class="lst-fl">→</span>${ch.map(noeud).join('<span class="lst-fl">→</span>')}${ch.length ? '<span class="lst-fl">→</span>' : ""}<span class="hc-fin">−1</span></div>`;
+    }).join("");
+    const ligne = nom => `<tr><th>${nom}</th>${st.tabs[nom].map((x, i) => `<td class="${prev && prev.tabs[nom][i] !== x ? "ecrit" : ""}${x === null ? " libre" : ""}">${x === null ? "" : esc(x)}</td>`).join("")}</tr>`;
+    el.querySelector(".lst-mem").innerHTML = `<tr><th></th>${D.map((_, i) => `<th>[${i}]</th>`).join("")}</tr>` + ligne("H") + ligne("D") + ligne("P");
+  }
+};
+
+window.VISUS = { liste, arbre, hachage };
 })();

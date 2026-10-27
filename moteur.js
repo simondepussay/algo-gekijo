@@ -43,7 +43,20 @@ const UI = {
 };
 const CPT = { cmp: [["比較", "comparisons"], "var(--kin)"], swap: [["交換", "swaps"], "var(--sakura)"], aff: [["代入", "assignments"], "var(--ai)"] };
 
+/* écran trop petit : le chien demande d'ouvrir le site sur un grand écran (on peut passer outre) */
+function verifierEcran() {
+  const pe = $("#petit-ecran");
+  let ignore = false;
+  try { ignore = sessionStorage.getItem(CLE + "-petit") === "1"; } catch {}
+  const petit = window.matchMedia("(max-width: 899px), (max-height: 539px)").matches;
+  $("#pe-titre").textContent = L("画面がちょっとせまいワン！", "This screen is a bit small, woof!");
+  $("#pe-texte").textContent = L("パソコンやタブレットの大きな画面で開くと、プログラム・配列・トレース表がぜんぶ同時に見られるよ。",
+    "Open the site on a computer or a tablet: you will see the program, the array and the trace table all at once.");
+  $("#pe-ok").textContent = L("このまま使う", "Continue anyway");
+  pe.hidden = !petit || ignore;
+}
 function appliquerTextes() {
+  verifierEcran();
   document.documentElement.lang = LANG;
   document.querySelectorAll("[data-t]").forEach(e => { e.innerHTML = UI[LANG][e.dataset.t]; });
   document.querySelectorAll("[data-t-title]").forEach(e => { e.title = UI[LANG][e.dataset.tTitle]; });
@@ -599,6 +612,11 @@ $("#vues").addEventListener("click", e => {
 $("#modes").addEventListener("click", e => { const b = e.target.closest(".mode"); if (b) choisirMode(b.dataset.mode); });
 $("#langues").addEventListener("click", e => { const b = e.target.closest(".mode"); if (b) choisirLangue(b.dataset.lang); });
 $("#onglets").addEventListener("click", e => { const b = e.target.closest("button"); if (b) choisirOnglet(b.dataset.onglet); });
+$("#pe-ok").addEventListener("click", () => {
+  try { sessionStorage.setItem(CLE + "-petit", "1"); } catch {}
+  $("#petit-ecran").hidden = true;
+});
+addEventListener("resize", verifierEcran);
 $("#b-debut").addEventListener("click", () => { S.repondu.clear(); S.serie = 0; aller(0); });
 $("#b-arriere").addEventListener("click", reculer);
 $("#b-avant").addEventListener("click", suivant);

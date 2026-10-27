@@ -1832,6 +1832,335 @@ window.ALGOS = [
     { ja: ["シェルソートの最後の段階（gap = 1）は何と同じ？", ["基本挿入法", "基本選択法", "基本交換法", "ヒープソート"], "間隔 1 で挿入法をすれば、ふつうの挿入法。"],
       en: ["The last pass of shell sort (gap = 1) is the same as…?", ["insertion sort", "selection sort", "bubble sort", "heap sort"], "Insertion with a distance of 1 is plain insertion sort."] }
   ]
+},
+
+{
+  id: "chain", cat: "tansaku", jp: "ハッシュ探索（チェーン法）", en: "Hash search (chaining)", ordre: "O(1)",
+  resume: { ja: "ハッシュ値（x mod 5）ごとにリストを持つ。シノニムは同じ位置のリストにつないでいくので、表があふれない。", en: "Each hash value (x mod 5) owns a linked list. Synonyms are chained in the same list, so the table never overflows." },
+  cle: { ja: "格納：ノード領域に入れて、そのリストの先頭につなぐ。探索：H[K] からリストをたどる（線形探索と同じ）。", en: "Store: put it in the node area and link it at the head of its list. Find: walk the list from H[K] (a linear search)." },
+  base: 0, tab: "H, D, P", visu: "hachage", ops: ["add", "find"], opsArg: { add: true, find: true }, opsExemple: "add 12, find 7",
+  prog: [
+    "大域: 整数型の配列: H      /* 要素数 5：各リストの先頭ノード（なければ −1） */",
+    "大域: 整数型の配列: D, P   /* ノード領域：データと次のノード */",
+    "大域: 整数型: N ← 0        /* 使用中のノード数 */",
+    "○kakunou(整数型: x)",
+    "  整数型: K",
+    "  K ← x mod 5             /* ハッシュ関数 */",
+    "  D[N] ← x",
+    "  P[N] ← H[K]             /* 今の先頭の前につなぐ */",
+    "  H[K] ← N",
+    "  N ← N + 1",
+    "○整数型: tansaku(整数型: x)",
+    "  整数型: K, I",
+    "  K ← x mod 5",
+    "  I ← H[K]",
+    "  while ((I ≠ −1) and (D[I] ≠ x))",
+    "    I ← P[I]",
+    "  endwhile",
+    "  return I"
+  ],
+  flow: [
+    { titre: "格納", noeuds: [
+      { t: "term", txt: "開始" },
+      { t: "io", txt: "x 入力", l: [4, 5] },
+      { t: "proc", txt: "K ← x % 5", l: 6 },
+      { t: "proc", txt: "D[N] ← x", l: 7 },
+      { t: "proc", txt: "P[N] ← H[K]", l: 8 },
+      { t: "proc", txt: "H[K] ← N", l: 9 },
+      { t: "proc", txt: "N ← N + 1", l: 10 },
+      { t: "term", txt: "終了" }
+    ] },
+    { titre: "探索", noeuds: [
+      { t: "term", txt: "開始" },
+      { t: "io", txt: "x 入力", l: [11, 12] },
+      { t: "proc", txt: "K ← x % 5", l: 13 },
+      { t: "proc", txt: "I ← H[K]", l: 14 },
+      { t: "boucle", nom: "探索処理", cond: "I ≠ −1 かつ x ≠ D[I]", l: 15, lFin: 17, corps: [{ t: "proc", txt: "I ← P[I]", l: 16 }] },
+      { t: "io", txt: "I 出力", l: 18 },
+      { t: "term", txt: "終了" }
+    ] }
+  ],
+  donnees: { ops: [["add", 12], ["add", 7], ["add", 22], ["add", 9], ["add", 17], ["find", 7], ["find", 27]] },
+  prepare: () => ({ H: [-1, -1, -1, -1, -1], D: Array(8).fill(null), P: Array(8).fill(null) }),
+  hasard() {
+    const ops = [], dans = []; const k = Math.floor(Math.random() * 5);
+    for (let n = 0; n < 6; n++) { let x; do { x = (n % 2 ? Math.floor(Math.random() * 5) : k) + 5 * (1 + Math.floor(Math.random() * 18)); } while (dans.includes(x) || x > 99); dans.push(x); ops.push(["add", x]); }
+    ops.push(["find", dans[1]], ["find", k + 95 > 99 ? k + 90 : k + 95]);
+    return ops;
+  },
+  vars: ["x", "K", "I", "N"], pointeurs: { I: "var(--shu)" }, compteurs: ["cmp"],
+  trace: L => [L("操作", "operation"), "K", L("たどったノード", "nodes walked"), L("結果", "result")],
+  ligne: (v, a, arr, o) => [o.op ?? "—", v.K ?? "—", o.essais ?? "—", o.res ?? "—"],
+  run(T) {
+    const v = T.v, L = T.L, H = k => T.t("H", k), D = i => T.t("D", i), P = i => T.t("P", i);
+    v.N = 0;
+    T.step(3, L("空の表：H[0]〜H[4] はすべて −1（リストが空）。ハッシュ関数は x mod 5。", "An empty table: H[0]…H[4] are all −1 (empty lists). The hash function is x mod 5."));
+    T.ops.forEach(([op, x]) => {
+      v.x = x; v.K = undefined; v.I = undefined;
+      if (op === "add") {
+        T.step(4, L(`kakunou(${x})：${x} を格納する。`, `kakunou(${x}): store ${x}.`));
+        if (v.N >= 8) { T.step(4, L("ノード領域がいっぱいなので、この例では格納しない。", "The node area is full: this example skips."), { row: true, op: `add ${x}` }); return; }
+        T.step(5, L("K を用意。", "K is created."));
+        v.K = x % 5;
+        T.step(6, L(`K ← ${x} mod 5 = ${v.K}：${v.K} 番のリストに入れる。`, `K ← ${x} mod 5 = ${v.K}: it goes into list ${v.K}.`), { q: { texte: L(`${x} mod 5 は？`, `${x} mod 5 = ?`), choix: T.choix(v.K, [x % 10, Math.trunc(x / 5), (v.K + 1) % 5]) } });
+        T.tset("D", v.N, x);
+        T.step(7, L(`D[${v.N}] ← ${x}：ノード領域の ${v.N} 番に入れる。`, `D[${v.N}] ← ${x}: store it in node ${v.N}.`), { ecrit: [v.N] });
+        const avant = H(v.K);
+        T.tset("P", v.N, avant);
+        T.step(8, L(`P[${v.N}] ← H[${v.K}] = ${avant}：${avant === -1 ? "リストは空だったので、次はない（−1）" : `新しいノードの次は、今の先頭（ノード ${avant}）`}。`, `P[${v.N}] ← H[${v.K}] = ${avant}: ${avant === -1 ? "the list was empty, so no next (−1)" : `the new node points to the current head (node ${avant})`}.`), { ecrit: [v.N],
+          q: { texte: L(`P[${v.N}] に入る値は？`, `What goes into P[${v.N}]?`), choix: T.choix(avant, [v.N, -1, v.K]) } });
+        T.tset("H", v.K, v.N);
+        T.step(9, L(`H[${v.K}] ← ${v.N}：新しいノードがリストの先頭になった。${avant === -1 ? "" : "シノニムがつながっている！"}`, `H[${v.K}] ← ${v.N}: the new node is now the head of the list.${avant === -1 ? "" : " Synonyms are chained!"}`));
+        v.N++;
+        T.step(10, L(`N ← N + 1 = ${v.N}。`, `N ← N + 1 = ${v.N}.`), { row: true, op: `add ${x}`, res: `H[${v.K}]` });
+      } else {
+        T.step(11, L(`tansaku(${x})：${x} を探す。`, `tansaku(${x}): look for ${x}.`));
+        T.step(12, L("K と I を用意。", "K and I are created."));
+        v.K = x % 5;
+        T.step(13, L(`K ← ${x} mod 5 = ${v.K}：${v.K} 番のリストだけ見ればよい。`, `K ← ${x} mod 5 = ${v.K}: only list ${v.K} needs to be checked.`), { q: { texte: L(`${x} mod 5 は？`, `${x} mod 5 = ?`), choix: T.choix(v.K, [x % 10, Math.trunc(x / 5), (v.K + 1) % 5]) } });
+        v.I = H(v.K);
+        const essais = [];
+        T.step(14, L(`I ← H[${v.K}] = ${v.I}：リストの先頭から。`, `I ← H[${v.K}] = ${v.I}: from the head of the list.`), { look: v.I === -1 ? [] : [v.I] });
+        while (true) {
+          const fin = v.I === -1, ne = !fin && D(v.I) !== x;
+          if (!fin) { T.c.cmp++; essais.push(D(v.I)); }
+          T.step(15, fin ? L("I = −1：リストの終わり → 見つからない。", "I = −1: end of the list → not found.") : L(`D[${v.I}] = ${D(v.I)} ${ne ? "≠" : "="} ${x} → ${ne ? "次のノードへ" : "見つかった！"}`, `D[${v.I}] = ${D(v.I)} ${ne ? "≠" : "="} ${x} → ${ne ? "next node" : "found!"}`),
+            { cmp: fin ? [] : [v.I], q: { texte: fin ? L("I = −1。探索は続く？", "I = −1. Keep searching?") : L(`D[I] = ${D(v.I)}、x = ${x}。探索は続く？`, `D[I] = ${D(v.I)}, x = ${x}. Keep searching?`), choix: [L("続く", "keep going"), L("終わる", "stop")], bon: ne ? L("続く", "keep going") : L("終わる", "stop") } });
+          if (!ne) break;
+          v.I = P(v.I);
+          T.step(16, L(`I ← P[I] = ${v.I}。`, `I ← P[I] = ${v.I}.`), { look: v.I === -1 ? [] : [v.I] });
+        }
+        T.step(18, v.I === -1 ? L("return −1：見つからなかった。", "return −1: not found.") : L(`return ${v.I}：${x} はノード ${v.I}。`, `return ${v.I}: ${x} is node ${v.I}.`),
+          { trouve: v.I === -1 ? [] : [v.I], row: true, op: `find ${x}`, essais: essais.join("→") || "（空）", res: v.I });
+      }
+    });
+    v.x = undefined; v.K = undefined; v.I = undefined;
+    T.step(3, L("すべての操作が終わった。", "All operations done."), { fin: true });
+  },
+  blancs: [
+    { ligne: 8, trou: "P[N] ← H[K]", choix: ["P[N] ← H[K]", "P[N] ← −1", "H[K] ← P[N]", "P[N] ← K"],
+      expl: { ja: "先頭に追加するので、新しいノードの次は「今までの先頭」。−1 にすると、前からあったノードが切れてしまう。", en: "We add at the head, so the new node points to the old head. With −1, the nodes already in the list would be lost." } }
+  ],
+  qcm: [
+    { ja: ["チェーン法の特徴は？", ["シノニムをリストでつなぐので、表があふれない", "衝突したら次の位置を探す", "必ず比較1回で見つかる", "整列が必要"], "「次の位置を探す」のはオープンアドレス法。"],
+      en: ["What characterises chaining?", ["synonyms are chained in lists, so the table never overflows", "on a collision, try the next position", "always found in one comparison", "sorting is required"], "“Try the next position” is open addressing."] }
+  ]
+},
+
+{
+  id: "quick", cat: "seiretsu", jp: "クイックソート", en: "Quicksort", ordre: "O(n log n)",
+  resume: { ja: "基準値（ピボット）を決め、それより小さい値を左、大きい値を右に分ける。左右それぞれを、同じ方法で再帰的に整列する。", en: "Pick a pivot, move smaller values to its left and bigger ones to its right, then sort each side the same way, recursively." },
+  cle: { ja: "1回の分割で基準値の位置が確定（★）。平均 O(n log n) で速いが、すでに整列済みだと O(n²) になることがある。", en: "Each split fixes the pivot’s position (★). O(n log n) on average, but can fall to O(n²) on already sorted data." },
+  base: 0, tab: "T",
+  prog: [
+    "○quick(整数型の配列: T, 整数型: L, 整数型: R)    /* 最初は quick(T, 0, Tの要素数 − 1) */",
+    "  整数型: P, I, J, work",
+    "  if (L < R)",
+    "    P ← T[R]                  /* 基準値：右端 */",
+    "    I ← L                     /* P より小さい値を置く位置 */",
+    "    for (J を L から R − 1 まで 1 ずつ増やす)",
+    "      if (T[J] < P)",
+    "        work ← T[I]",
+    "        T[I] ← T[J]",
+    "        T[J] ← work",
+    "        I ← I + 1",
+    "      endif",
+    "    endfor",
+    "    work ← T[I]",
+    "    T[I] ← T[R]",
+    "    T[R] ← work               /* 基準値が T[I] で確定 */",
+    "    quick(T, L, I − 1)",
+    "    quick(T, I + 1, R)",
+    "  endif"
+  ],
+  flow: [{ noeuds: [
+    { t: "term", txt: "quick(L, R)", l: [1, 2] },
+    { t: "si", cond: "L < R", l: 3, oui: [
+      { t: "proc", txt: "P ← T[R]", l: 4 },
+      { t: "proc", txt: "I ← L", l: 5 },
+      { t: "boucle", nom: "分割", cond: "J:L, J < R, 1", l: 6, lFin: 13, corps: [
+        { t: "si", cond: "T[J] < P", l: 7, oui: [{ t: "proc", txt: "T[I] と T[J] を交換", l: [8, 9, 10] }, { t: "proc", txt: "I ← I + 1", l: 11 }], non: [] }] },
+      { t: "proc", txt: "T[I] と T[R] を交換", l: [14, 15, 16] },
+      { t: "appel", txt: "quick(L, I − 1)", l: 17 },
+      { t: "appel", txt: "quick(I + 1, R)", l: 18 }
+    ], non: [] },
+    { t: "term", txt: "出口", l: 19 }
+  ] }],
+  donnees: { a: [38, 81, 22, 50, 14, 67] },
+  vars: ["L", "R", "P", "I", "J", "呼出し"], pointeurs: { L: "var(--matcha)", R: "var(--ai)", I: "var(--kin)", J: "var(--shu)" }, compteurs: ["cmp", "swap"],
+  actif: (v, i) => v.L === undefined || (i >= v.L && i <= v.R),
+  trace: L => [L("呼出し", "call"), L("基準値", "pivot"), L("確定位置", "fixed at"), L("実行後の T", "T after")],
+  ligne: (v, a, arr) => [v.L !== undefined ? `(${v.L}, ${v.R})` : "—", v.P ?? "—", v.I ?? "—", arr.join("  ")],
+  run(T) {
+    const v = T.v, L = T.L, pile = [];
+    const montrer = (l, r, p, i) => { v.L = l; v.R = r; v.P = p; v.I = i; v.J = undefined; v["呼出し"] = pile.map(([a, b]) => `(${a},${b})`).join(" → "); };
+    const tri = (l, r) => {
+      pile.push([l, r]); montrer(l, r, undefined, undefined);
+      T.step(1, L(`quick(T, ${l}, ${r}) が呼ばれた：T[${l}]〜T[${r}] を整列する。`, `quick(T, ${l}, ${r}) is called: sort T[${l}]…T[${r}].`));
+      const ok = l < r;
+      T.step(3, ok ? L(`L = ${l} < R = ${r}：要素が2つ以上 → 分割する。`, `L = ${l} < R = ${r}: two or more elements → split.`) : L(`L = ${l} ≥ R = ${r}：要素が1つ以下 → 何もしない。`, `L = ${l} ≥ R = ${r}: one element or none → nothing to do.`),
+        { q: { texte: L(`quick(T, ${l}, ${r})。分割する？`, `quick(T, ${l}, ${r}). Split?`), choix: [L("分割する", "split"), L("何もしない", "nothing")], bon: ok ? L("分割する", "split") : L("何もしない", "nothing") } });
+      if (ok) {
+        v.P = T.a(r); T.step(4, L(`P ← T[${r}] = ${v.P}：右端を基準値にする。`, `P ← T[${r}] = ${v.P}: the right end is the pivot.`), { look: [r] });
+        v.I = l; T.step(5, L(`I ← ${l}：P より小さい値は T[${l}] から順に置いていく。`, `I ← ${l}: values smaller than P go to T[${l}], T[${l + 1}]…`), { look: [l] });
+        for (v.J = l; v.J < r; v.J++) {
+          T.step(6, L(`J = ${v.J}。`, `J = ${v.J}.`), { look: [v.J] });
+          const pt = T.a(v.J) < v.P; T.c.cmp++;
+          T.step(7, L(`T[${v.J}] = ${T.a(v.J)} ${pt ? "<" : "≥"} P = ${v.P} → ${pt ? "左側へ集める" : "そのまま"}。`, `T[${v.J}] = ${T.a(v.J)} ${pt ? "<" : "≥"} P = ${v.P} → ${pt ? "gather it on the left" : "leave it"}.`),
+            { cmp: [v.J, r], q: { texte: L(`T[J] = ${T.a(v.J)}、P = ${v.P}。T[J] < P は？`, `T[J] = ${T.a(v.J)}, P = ${v.P}. Is T[J] < P?`), choix: [L("真", "true"), L("偽", "false")], bon: pt ? L("真", "true") : L("偽", "false") } });
+          if (pt) {
+            v.work = T.a(v.I); T.set(v.I, T.a(v.J)); T.set(v.J, v.work); T.c.swap++;
+            T.step(10, v.I === v.J ? L(`T[${v.I}] と T[${v.J}]（同じ位置）を交換。`, `Swap T[${v.I}] with T[${v.J}] (the same cell).`) : L(`T[${v.I}] と T[${v.J}] を交換：${T.a(v.I)} を左側へ。`, `Swap T[${v.I}] and T[${v.J}]: ${T.a(v.I)} moves to the left part.`), { ecrit: [v.I, v.J] });
+            v.I++; T.step(11, L(`I ← ${v.I}。`, `I ← ${v.I}.`), { look: [v.I] });
+          }
+        }
+        T.step(6, L("J が R に着いた：分割の比較が終わった。", "J reached R: the split comparisons are done."));
+        v.work = T.a(v.I); T.set(v.I, T.a(r)); T.set(r, v.work); T.c.swap++; T.fixer(v.I);
+        T.step(16, L(`T[${v.I}] と T[${r}] を交換：基準値 ${v.P} が T[${v.I}] で確定 ★ 左はすべて小さく、右はすべて大きい。`, `Swap T[${v.I}] and T[${r}]: the pivot ${v.P} is final in T[${v.I}] ★ Everything left is smaller, everything right is bigger.`),
+          { ecrit: [v.I, r], row: true, q: { texte: L(`基準値 ${v.P} が確定する位置は？`, `Where does the pivot ${v.P} end up?`), choix: T.choix(v.I, [l, r, v.I + 1]) } });
+        const p = v.P, i = v.I;
+        T.step(17, L(`quick(T, ${l}, ${i - 1})：左側を整列する。`, `quick(T, ${l}, ${i - 1}): sort the left part.`));
+        tri(l, i - 1); montrer(l, r, p, i);
+        T.step(17, L(`quick(T, ${l}, ${r}) に戻ってきた。`, `Back in quick(T, ${l}, ${r}).`));
+        T.step(18, L(`quick(T, ${i + 1}, ${r})：右側を整列する。`, `quick(T, ${i + 1}, ${r}): sort the right part.`));
+        tri(i + 1, r); montrer(l, r, p, i);
+        T.step(18, L(`quick(T, ${l}, ${r}) に戻ってきた。`, `Back in quick(T, ${l}, ${r}).`));
+      } else if (l === r) T.fixer(l);
+      T.step(19, L(`quick(T, ${l}, ${r}) が終わる。`, `quick(T, ${l}, ${r}) ends.`), { fin: pile.length === 1 });
+      pile.pop();
+    };
+    tri(0, T.n - 1);
+  },
+  blancs: [
+    { ligne: 7, trou: "T[J] < P", choix: ["T[J] < P", "T[J] > P", "T[I] < T[J]", "J < I"],
+      expl: { ja: "基準値より小さい値を左側（T[L]〜T[I − 1]）に集める。", en: "Values smaller than the pivot are gathered on the left (T[L]…T[I − 1])." } },
+    { ligne: 17, trou: "quick(T, L, I − 1)", choix: ["quick(T, L, I − 1)", "quick(T, L, I)", "quick(T, 0, R)", "quick(T, I, R)"],
+      expl: { ja: "T[I] は確定済みなので、その左 L〜I − 1 だけを整列する。I まで含めると無限に呼び続けることがある。", en: "T[I] is final, so only L…I − 1 is sorted next. Including I could recurse forever." } }
+  ],
+  qcm: [
+    { ja: ["クイックソートの平均計算量は？", ["O(n log n)", "O(n²)", "O(n)", "O(log n)"], "毎回ほぼ半分に分かれれば、深さ log n、各段で n。"],
+      en: ["What is quicksort’s average cost?", ["O(n log n)", "O(n²)", "O(n)", "O(log n)"], "If each split halves the range: depth log n, n work per level."] },
+    { ja: ["右端を基準値にするとき、最も遅くなるデータは？", ["すでに整列済み", "ランダム", "すべて違う値", "要素が偶数個"], "毎回いちばん大きい値が基準値になり、片側に1つも分かれない → O(n²)。"],
+      en: ["With the right end as pivot, which data is slowest?", ["already sorted", "random", "all distinct", "even count"], "The pivot is always the biggest, so nothing splits off → O(n²)."] }
+  ]
+},
+
+{
+  id: "merge", cat: "seiretsu", jp: "マージソート", en: "Merge sort", ordre: "O(n log n)",
+  resume: { ja: "配列を半分に分け、それぞれを再帰的に整列してから、2つの整列済みの列を小さい順に併合（マージ）する。", en: "Split the array in half, sort each half recursively, then merge the two sorted halves, smallest first." },
+  cle: { ja: "併合：左の先頭 T[I] と右の先頭 T[J] を比べ、小さいほうを作業用配列 W へ。最後に W を T に書き戻す。", en: "Merging: compare the heads T[I] (left) and T[J] (right), move the smaller to the work array W, then copy W back into T." },
+  base: 0, tab: "T",
+  prog: [
+    "○merge(整数型の配列: T, 整数型: L, 整数型: R)    /* 最初は merge(T, 0, Tの要素数 − 1) */",
+    "  整数型: M, I, J, K",
+    "  整数型の配列: W                /* 作業用 */",
+    "  if (L < R)",
+    "    M ← (L + R) ÷ 2 の商",
+    "    merge(T, L, M)",
+    "    merge(T, M + 1, R)",
+    "    I ← L",
+    "    J ← M + 1",
+    "    K ← 0",
+    "    while ((I ≤ M) and (J ≤ R))",
+    "      if (T[I] ≤ T[J])",
+    "        W[K] ← T[I]",
+    "        I ← I + 1",
+    "      else",
+    "        W[K] ← T[J]",
+    "        J ← J + 1",
+    "      endif",
+    "      K ← K + 1",
+    "    endwhile",
+    "    while (I ≤ M)                /* 左の残り */",
+    "      W[K] ← T[I]",
+    "      I ← I + 1",
+    "      K ← K + 1",
+    "    endwhile",
+    "    while (J ≤ R)                /* 右の残り */",
+    "      W[K] ← T[J]",
+    "      J ← J + 1",
+    "      K ← K + 1",
+    "    endwhile",
+    "    for (K を 0 から R − L まで 1 ずつ増やす)",
+    "      T[L + K] ← W[K]",
+    "    endfor",
+    "  endif"
+  ],
+  flow: [{ noeuds: [
+    { t: "term", txt: "merge(L, R)", l: [1, 2, 3] },
+    { t: "si", cond: "L < R", l: 4, oui: [
+      { t: "proc", txt: "M ← (L + R) ÷ 2", l: 5 },
+      { t: "appel", txt: "merge(L, M)", l: 6 },
+      { t: "appel", txt: "merge(M + 1, R)", l: 7 },
+      { t: "proc", txt: "I ← L, J ← M + 1, K ← 0", l: [8, 9, 10] },
+      { t: "boucle", nom: "併合", cond: "I ≤ M かつ J ≤ R", l: 11, lFin: 20, corps: [
+        { t: "si", cond: "T[I] ≤ T[J]", l: 12, oui: [{ t: "proc", txt: "W[K] ← T[I], I ← I + 1", l: [13, 14] }], non: [{ t: "proc", txt: "W[K] ← T[J], J ← J + 1", l: [16, 17] }] },
+        { t: "proc", txt: "K ← K + 1", l: 19 }] },
+      { t: "boucle", nom: "左の残り", cond: "I ≤ M", l: 21, lFin: 25, corps: [{ t: "proc", txt: "W[K] ← T[I], I・K を +1", l: [22, 23, 24] }] },
+      { t: "boucle", nom: "右の残り", cond: "J ≤ R", l: 26, lFin: 30, corps: [{ t: "proc", txt: "W[K] ← T[J], J・K を +1", l: [27, 28, 29] }] },
+      { t: "boucle", nom: "書き戻し", cond: "K:0, K ≤ R − L, 1", l: 31, lFin: 33, corps: [{ t: "proc", txt: "T[L + K] ← W[K]", l: 32 }] }
+    ], non: [] },
+    { t: "term", txt: "出口", l: 34 }
+  ] }],
+  donnees: { a: [38, 81, 22, 50, 14, 67] },
+  vars: ["L", "R", "M", "I", "J", "W", "呼出し"], pointeurs: { I: "var(--matcha)", J: "var(--shu)" }, compteurs: ["cmp", "aff"],
+  actif: (v, i) => v.L === undefined || (i >= v.L && i <= v.R),
+  trace: L => [L("呼出し", "call"), "M", "W", L("実行後の T", "T after")],
+  ligne: (v, a, arr) => [v.L !== undefined ? `(${v.L}, ${v.R})` : "—", v.M ?? "—", v.W || "—", arr.join("  ")],
+  run(T) {
+    const v = T.v, L = T.L, pile = [];
+    const montrer = (l, r, m) => { v.L = l; v.R = r; v.M = m; v.I = undefined; v.J = undefined; v.W = ""; v["呼出し"] = pile.map(([a, b]) => `(${a},${b})`).join(" → "); };
+    const tri = (l, r) => {
+      pile.push([l, r]); montrer(l, r, undefined);
+      T.step(1, L(`merge(T, ${l}, ${r}) が呼ばれた：T[${l}]〜T[${r}] を整列する。`, `merge(T, ${l}, ${r}) is called: sort T[${l}]…T[${r}].`));
+      const ok = l < r;
+      T.step(4, ok ? L("要素が2つ以上 → 半分に分ける。", "Two or more elements → split in half.") : L("要素が1つ → もう整列済み。", "One element → already sorted."));
+      if (ok) {
+        const m = Math.trunc((l + r) / 2); v.M = m;
+        T.step(5, L(`M ← (${l} + ${r}) ÷ 2 = ${m}：左 T[${l}]〜T[${m}]、右 T[${m + 1}]〜T[${r}]。`, `M ← (${l} + ${r}) ÷ 2 = ${m}: left T[${l}]…T[${m}], right T[${m + 1}]…T[${r}].`),
+          { q: { texte: L(`(${l} + ${r}) ÷ 2 の商は？`, `Quotient of (${l} + ${r}) ÷ 2?`), choix: T.choix(m, [m + 1, l + r, r]) } });
+        T.step(6, L(`merge(T, ${l}, ${m})：左半分を整列する。`, `merge(T, ${l}, ${m}): sort the left half.`));
+        tri(l, m); montrer(l, r, m);
+        T.step(6, L(`merge(T, ${l}, ${r}) に戻ってきた：左半分 {${T.arr().slice(l, m + 1).join(", ")}} は整列済み。`, `Back in merge(T, ${l}, ${r}): the left half {${T.arr().slice(l, m + 1).join(", ")}} is sorted.`));
+        T.step(7, L(`merge(T, ${m + 1}, ${r})：右半分を整列する。`, `merge(T, ${m + 1}, ${r}): sort the right half.`));
+        tri(m + 1, r); montrer(l, r, m);
+        T.step(7, L(`戻ってきた：右半分 {${T.arr().slice(m + 1, r + 1).join(", ")}} も整列済み。次は併合。`, `Back: the right half {${T.arr().slice(m + 1, r + 1).join(", ")}} is sorted too. Now merge.`));
+        const W = [];
+        v.I = l; v.J = m + 1;
+        T.step(10, L(`I ← ${l}（左の先頭）、J ← ${m + 1}（右の先頭）、K ← 0。`, `I ← ${l} (head of the left), J ← ${m + 1} (head of the right), K ← 0.`), { look: [l, m + 1] });
+        while (true) {
+          const cont = v.I <= m && v.J <= r;
+          T.step(11, cont ? L("左も右もまだ残っている。", "Both halves still have values.") : L(`${v.I > m ? "左" : "右"}が空になった → 併合ループ終了。`, `The ${v.I > m ? "left" : "right"} half is used up → leave the merge loop.`));
+          if (!cont) break;
+          const g = T.a(v.I) <= T.a(v.J); T.c.cmp++;
+          T.step(12, L(`T[${v.I}] = ${T.a(v.I)} と T[${v.J}] = ${T.a(v.J)} → 小さいのは${g ? "左" : "右"}。`, `T[${v.I}] = ${T.a(v.I)} and T[${v.J}] = ${T.a(v.J)} → the smaller is on the ${g ? "left" : "right"}.`),
+            { cmp: [v.I, v.J], q: { texte: L(`${T.a(v.I)} と ${T.a(v.J)}。W に入るのは？`, `${T.a(v.I)} and ${T.a(v.J)}. Which goes into W?`), choix: T.choix(Math.min(T.a(v.I), T.a(v.J)), [Math.max(T.a(v.I), T.a(v.J))]) } });
+          if (g) { W.push(T.a(v.I)); v.W = W.join(" "); v.I++; T.c.aff++; T.step(14, L(`W ← ${W[W.length - 1]}、I ← ${v.I}。`, `W ← ${W[W.length - 1]}, I ← ${v.I}.`)); }
+          else { W.push(T.a(v.J)); v.W = W.join(" "); v.J++; T.c.aff++; T.step(17, L(`W ← ${W[W.length - 1]}、J ← ${v.J}。`, `W ← ${W[W.length - 1]}, J ← ${v.J}.`)); }
+          T.step(19, L(`K ← ${W.length}。`, `K ← ${W.length}.`));
+        }
+        while (v.I <= m) { W.push(T.a(v.I)); v.W = W.join(" "); v.I++; T.c.aff++; T.step(24, L(`左の残り ${W[W.length - 1]} を W へ。`, `Left leftover ${W[W.length - 1]} goes to W.`)); }
+        while (v.J <= r) { W.push(T.a(v.J)); v.W = W.join(" "); v.J++; T.c.aff++; T.step(29, L(`右の残り ${W[W.length - 1]} を W へ。`, `Right leftover ${W[W.length - 1]} goes to W.`)); }
+        v.I = undefined; v.J = undefined;
+        for (let k = 0; k <= r - l; k++) { T.set(l + k, W[k]); }
+        T.step(32, L(`W = {${W.join(", ")}} を T[${l}]〜T[${r}] に書き戻した。`, `W = {${W.join(", ")}} is copied back into T[${l}]…T[${r}].`), { ecrit: Array.from({ length: r - l + 1 }, (_, k) => l + k), row: true });
+      }
+      if (pile.length === 1) for (let k = 0; k < T.n; k++) T.fixer(k);
+      T.step(34, L(`merge(T, ${l}, ${r}) が終わる。`, `merge(T, ${l}, ${r}) ends.`), { fin: pile.length === 1 });
+      pile.pop();
+    };
+    tri(0, T.n - 1);
+  },
+  blancs: [
+    { ligne: 12, trou: "T[I] ≤ T[J]", choix: ["T[I] ≤ T[J]", "T[I] ≥ T[J]", "I ≤ J", "T[I] = T[J]"],
+      expl: { ja: "左右の先頭のうち小さいほうを先に W へ。≤ にすると、同じ値のとき左が先になり、順序が保たれる（安定）。", en: "The smaller head goes to W first. With ≤, equal values keep their order (the sort is stable)." } }
+  ],
+  qcm: [
+    { ja: ["マージソートの計算量は？", ["いつも O(n log n)", "平均 O(n log n)、最悪 O(n²)", "O(n²)", "O(n)"], "分け方がいつも半分なので、データの並びに関係なく O(n log n)。"],
+      en: ["What does merge sort cost?", ["always O(n log n)", "O(n log n) average, O(n²) worst", "O(n²)", "O(n)"], "It always splits in half, whatever the data: O(n log n)."] },
+    { ja: ["マージソートの欠点は？", ["作業用の配列が必要", "最悪 O(n²)", "整列済みに弱い", "再帰が使えない"], "併合のために、元と同じ大きさの作業領域 W を使う。"],
+      en: ["What is merge sort’s drawback?", ["it needs a work array", "O(n²) worst case", "slow on sorted data", "cannot use recursion"], "Merging needs a work area W as big as the data."] }
+  ]
 }
 
 

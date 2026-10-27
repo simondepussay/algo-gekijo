@@ -16,8 +16,8 @@ Deux présentations du même programme, avec **les mêmes numéros de ligne** :
 
 | Catégorie | Algorithmes |
 |---|---|
-| 探索 | 最大値, 線形探索, 線形探索（番兵法）, 2分探索, ハッシュ探索（オープンアドレス法） |
-| 整列 | 基本選択法, 基本交換法（バブルソート）, 基本挿入法, ヒープソート, シェーカーソート, シェルソート |
+| 探索 | 最大値, 線形探索, 線形探索（番兵法）, 2分探索, ハッシュ探索（オープンアドレス法・チェーン法） |
+| 整列 | 基本選択法, 基本交換法（バブルソート）, 基本挿入法, ヒープソート, シェーカーソート, シェルソート, クイックソート, マージソート |
 | データ構造 | スタック, キュー（循環）, リスト（追加・削除） |
 | 木 | 幅優先探索, 深さ優先探索（先行・中間・後行順）, 2分探索木（探索・追加）, ヒープ（追加・取出し） |
 
@@ -30,7 +30,8 @@ Deux présentations du même programme, avec **les mêmes numéros de ligne** :
 | `algos.js` | les algorithmes : programme, données, déroulé ligne par ligne, exercices |
 | `moteur.js` | enregistre chaque étape et dessine l’étape courante |
 | `flow.js` | dessin des 流れ図 (symboles JIS) |
-| `visus.js` | dessins de la liste chaînée et des arbres |
+| `visus.js` | dessins de la liste chaînée, des arbres et de la チェーン法 |
+| `chien.jpg` | le médaillon affiché quand l’écran est trop petit |
 | `fete.js` | confettis et personnages d’encouragement |
 
 Ajouter un algorithme = ajouter une entrée dans `algos.js`.
