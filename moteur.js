@@ -60,7 +60,10 @@ const S = {
 /* ———————————— enregistrement ———————————— */
 function enregistrer(algo, donnees) {
   const steps = [], v = {}, c = { cmp: 0, swap: 0, aff: 0 }, fixe = [];
-  const arr = algo.prepare ? algo.prepare(donnees) : donnees.a.slice();
+  const prep = algo.prepare ? algo.prepare(donnees) : donnees.a.slice();
+  const tabs = Array.isArray(prep) ? null : prep;          /* plusieurs tableaux nommés (D, P…) */
+  const arr = tabs ? [] : prep;
+  const copieTabs = () => (tabs ? JSON.parse(JSON.stringify(tabs)) : null);
   const base = algo.base ?? 1;
   let prev = {};
   const a = i => arr[i - base];
@@ -69,6 +72,9 @@ function enregistrer(algo, donnees) {
     get n() { return arr.length; },
     a, arr: () => arr.slice(),
     set(i, val) { arr[i - base] = val; c.aff++; },
+    t: (nom, i) => tabs[nom][i],
+    tset(nom, i, val) { tabs[nom][i] = val; c.aff++; },
+    tab: nom => tabs[nom].slice(),
     fixer(i) { if (!fixe.includes(i)) fixe.push(i); },
     liste: () => arr.filter(z => z !== null).join(", "),
     /* bonne réponse + jusqu'à 3 distracteurs tirés de pool (+ voisins si besoin) */
@@ -87,9 +93,9 @@ function enregistrer(algo, donnees) {
       prev = vs;
       const q = o.q ? { texte: o.q.texte, choix: o.q.choix.map(String), bon: String(o.q.bon ?? o.q.choix.bon) } : null;
       steps.push({
-        line, msg, v: vs, arr: arr.slice(), c: { ...c }, fixe: fixe.slice(), changed,
+        line, msg, v: vs, arr: arr.slice(), tabs: copieTabs(), c: { ...c }, fixe: fixe.slice(), changed,
         look: o.look || [], cmp: o.cmp || [], ecrit: o.ecrit || [], trouve: o.trouve || [], partiel: o.partiel ?? null,
-        live: algo.ligne(vs, a, arr.slice(), o, L).map(x => (x === undefined ? "—" : String(x))),
+        live: algo.ligne(vs, a, arr.slice(), o, L, copieTabs()).map(x => (x === undefined ? "—" : String(x))),
         row: !!o.row,
         q, fin: !!o.fin
       });
@@ -114,7 +120,8 @@ function colorer(txt) {
 const CATS = [
   { id: "tansaku", ja: "探索", en: "Search" },
   { id: "seiretsu", ja: "整列", en: "Sorting" },
-  { id: "kouzou", ja: "データ構造", en: "Data structures" }
+  { id: "kouzou", ja: "データ構造", en: "Data structures" },
+  { id: "ki", ja: "木", en: "Trees" }
 ];
 function construireChoix() {
   const scores = lire(CLE, {});
@@ -163,6 +170,10 @@ function construireVars() {
 }
 
 function construireStage() {
+  $("#nom-tab").textContent = S.algo.tab || "a";
+  $("#cible").textContent = S.donnees.x !== undefined ? L(`x = ${S.donnees.x} を探す`, `looking for x = ${S.donnees.x}`) : "";
+  $("#stage").className = "stage" + (S.algo.visu ? " visu-" + S.algo.visu : "");
+  if (S.algo.visu) { VISUS[S.algo.visu].construire($("#stage")); return; }
   const n = S.steps[0].arr.length, b = S.algo.base ?? 1;
   const slot = (i, fantome, garde) => `<div class="slot${fantome ? " fantome" : ""}${garde ? " garde" : ""}" data-i="${i}">
       <div class="colonne"><span class="v"></span><div class="bar"></div></div>
@@ -179,11 +190,16 @@ function construireStage() {
 function texteOps(ops) { return ops.map(([o, x]) => (x === undefined ? o : `${o} ${x}`)).join(", "); }
 function construireDonnees() {
   const d = S.donnees, al = S.algo;
+  if (!al.ops && !d.a) {
+    $("#donnees").innerHTML = `<p class="muted small">${L("この例の木は固定です。木の形と配列 Data・Lp・Rp は、画面の真ん中に表示されています。", "The tree in this example is fixed. Its shape and the Data, Lp, Rp arrays are shown in the middle of the screen.")}</p>`;
+    return;
+  }
   const champ = al.ops
     ? `<label for="d-ops">${L("操作", "ops")} =</label><input id="d-ops" class="a" value="${esc(texteOps(d.ops))}">`
     : `<label for="d-a">${esc(al.tab || "a")} =</label><input id="d-a" class="a" value="${esc(d.a.join(", "))}" inputmode="numeric">`;
+  const ex = al.opsExemple || `${al.ops?.[0]} 10, ${al.ops?.[1]}`;
   const aide = al.ops
-    ? L(`「${al.ops[0]} 10, ${al.ops[1]}」のように、カンマで区切って 1〜12 個。配列の大きさは 5。`, `Like “${al.ops[0]} 10, ${al.ops[1]}”, 1 to 12 operations separated by commas. The array holds 5 items.`)
+    ? L(`「${ex}」のように、カンマで区切って 1〜12 個。配列の大きさは 5。`, `Like “${ex}”, 1 to 12 operations separated by commas. The array holds 5 items.`)
     : (al.trie ? L("2分探索は整列済みの配列でしか使えないので、自動で整列します。", "Binary search only works on a sorted array, so it is sorted automatically. ") : "") + L("0〜99 の整数を 2〜10 個。", "2 to 10 integers between 0 and 99.");
   $("#donnees").innerHTML = `<div class="form-d">${champ}
       ${d.x !== undefined ? `<label for="d-x">x =</label><input id="d-x" class="x" value="${esc(d.x)}" inputmode="numeric">` : ""}
@@ -198,6 +214,7 @@ function construireDonnees() {
   $("#d-defaut").addEventListener("click", () => { charger(al, al.donnees); fermer(); });
   $("#d-hasard").addEventListener("click", () => {
     const r = k => 1 + Math.floor(Math.random() * k);
+    if (al.hasard) { charger(al, { ops: al.hasard() }); fermer(); return; }
     if (al.ops) {
       const ops = []; let taille = 0;
       for (let k = 0; k < 8; k++) {
@@ -215,12 +232,13 @@ function construireDonnees() {
 }
 
 function appliquerDonnees() {
-  const err = $("#d-err"), al = S.algo;
+  const err = $("#d-err"), al = S.algo, ex = () => al.opsExemple || `${al.ops[0]} 10, ${al.ops[1]}`;
   if (al.ops) {
     const ops = $("#d-ops").value.split(/[,、，]+/).map(t => t.trim()).filter(Boolean).map(t => t.split(/\s+/));
-    const ok = ops.length >= 1 && ops.length <= 12 && ops.every(([o, x]) =>
-      (o === al.ops[0] && Number.isInteger(+x) && +x >= 0 && +x <= 99) || (o === al.ops[1] && x === undefined));
-    if (!ok) { err.textContent = L(`「${al.ops[0]} 数」か「${al.ops[1]}」を、カンマで区切って 1〜12 個。`, `Use “${al.ops[0]} number” or “${al.ops[1]}”, 1 to 12 of them, separated by commas.`); return; }
+    const arg = o => (al.opsArg ? !!al.opsArg[o] : o === al.ops[0]);
+    const ok = ops.length >= 1 && ops.length <= 12 && ops.every(([o, x]) => al.ops.includes(o) &&
+      (arg(o) ? Number.isInteger(+x) && +x >= 0 && +x <= 99 : x === undefined));
+    if (!ok) { err.textContent = L(`「${ex()}」のような操作を、カンマで区切って 1〜12 個。`, `Operations like “${ex()}”, 1 to 12 of them, separated by commas.`); return; }
     charger(al, { ops: ops.map(([o, x]) => (x === undefined ? [o] : [o, +x])) }); fermer(); return;
   }
   const a = $("#d-a").value.split(/[\s,、，]+/).filter(Boolean).map(Number);
@@ -334,6 +352,7 @@ function majVars(st, prevSt) {
 }
 
 function majStage(st, prevSt) {
+  if (S.algo.visu) { VISUS[S.algo.visu].maj($("#stage"), st, prevSt, S.algo, L); return; }
   const n = st.arr.length, al = S.algo, b = al.base ?? 1;
   document.querySelectorAll("#stage .slot").forEach(sl => {
     const i = +sl.dataset.i;
@@ -513,7 +532,8 @@ function ouvrir(id) {
 }
 function majExosDonnees() {
   const d = S.donnees, al = S.algo;
-  const quoi = d.ops ? `<code>${esc(texteOps(d.ops))}</code>`
+  const quoi = !d.ops && !d.a ? `<span class="muted">${L("木は固定（画面の真ん中）", "fixed tree (middle of the screen)")}</span>`
+    : d.ops ? `<code>${esc(texteOps(d.ops))}</code>`
     : `<code>${esc(al.tab || "a")} = {${esc(d.a.join(", "))}}</code>${d.x !== undefined ? `<code>x = ${esc(d.x)}</code>` : ""}<span class="muted">${L(`要素数 ${d.a.length}`, `${d.a.length} elements`)}</span>`;
   $("#exos-donnees").innerHTML = `<b>${L("データ", "Data")}</b>${quoi}<button class="petit" id="exos-changer">${ico("de")}${L("変更", "Change")}</button>`;
   $("#exos-changer").addEventListener("click", () => ouvrir("#d-donnees"));

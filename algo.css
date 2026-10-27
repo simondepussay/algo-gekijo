@@ -342,3 +342,48 @@ table.trace { border-collapse: separate; border-spacing: 0; width: 100%; font: .
 .slot.garde .idx::after { content: " 番兵"; color: var(--kin); font-weight: 700; }
 .slot.garde .bar { border-color: var(--kin); }
 .slot.partiel .bar { background: color-mix(in srgb, var(--matcha-soft) 70%, var(--sheet)); border-style: dashed; border-color: var(--matcha); }
+
+/* — liste chaînée : la chaîne Top → [D|P] → … et les tableaux en mémoire — */
+.stage.visu-liste { display: block; overflow: auto; }
+.lst { display: flex; flex-direction: column; gap: 14px; height: 100%; justify-content: center; }
+.lst-chaine, .lst-hors { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 4px; row-gap: 10px; }
+.lst-hors:empty { display: none; }
+.lst-legende { width: 100%; font-size: .75rem; color: var(--muted); }
+.lst-top { display: flex; flex-direction: column; align-items: center; font: 700 .72rem var(--mono); margin-top: 16px; }
+.lst-top b { border: 2px solid var(--ink); border-radius: 8px; padding: 2px 10px; font: 700 1rem var(--maru); background: var(--kin-soft); }
+.lst-fl { font: 700 1.2rem var(--maru); color: var(--ink-2); margin-top: 22px; }
+.lst-n { display: flex; flex-direction: column; align-items: center; transition: transform .3s; }
+.lst-i { font: .7rem var(--mono); color: var(--muted); }
+.lst-box { display: flex; border: 2px solid var(--ink); border-radius: 10px; overflow: hidden; background: var(--sheet); font: 700 1.05rem var(--maru); }
+.lst-box span { padding: 4px 10px; min-width: 2.2em; text-align: center; transition: background .25s; }
+.lst-box .lst-p { border-left: 2px dashed var(--ink); background: var(--ai-soft); font-size: .9rem; }
+.lst-fin .lst-box { padding: 4px 10px; border-style: dashed; color: var(--muted); }
+.lst-n .drapeaux { display: flex; gap: 3px; min-height: 22px; margin-top: 4px; }
+.lst-n.regarde .lst-box { background: var(--kin-soft); transform: translateY(-3px); }
+.lst-n.compare .lst-box { box-shadow: 0 0 0 3px var(--kin); }
+.lst-n.ecrit .lst-box { box-shadow: 0 0 0 3px var(--sakura); animation: tremble .4s; }
+.lst-n.lst-detache .lst-box { border-style: dashed; opacity: .85; }
+.lst-mem { border-collapse: collapse; font: .85rem var(--maru); margin: 0 auto; }
+.lst-mem th { font: 700 .72rem var(--mono); color: var(--muted); padding: 2px 10px; }
+.lst-mem td { border: 1.5px solid var(--ink); padding: 3px 12px; text-align: center; background: var(--sheet); transition: background .25s; }
+.lst-mem td.libre { color: var(--muted); background: var(--paper); }
+.lst-mem td.regarde { background: var(--kin-soft); }
+.lst-mem td.compare { background: var(--kin); }
+.lst-mem td.ecrit { background: var(--sakura); }
+
+/* — arbre binaire — */
+.stage.visu-arbre { display: block; overflow: auto; }
+.arb { display: flex; flex-direction: column; gap: 10px; height: 100%; }
+.arb-svg { flex: 1; min-height: 140px; width: 100%; }
+.arb-trait { stroke: var(--ink); stroke-width: 2; }
+.arb-n circle { fill: var(--sheet); stroke: var(--ink); stroke-width: 2.2; transition: fill .25s, stroke .25s; }
+.arb-v { font: 700 15px var(--maru); fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
+.arb-i { font: 10px var(--mono); fill: var(--muted); }
+.arb-fl text { font: 700 9.5px var(--mono); fill: #fff; text-anchor: middle; dominant-baseline: central; }
+.arb-vide { font: 14px var(--ui); fill: var(--muted); text-anchor: middle; }
+.arb-n.sorti circle { fill: var(--matcha-soft); stroke: var(--matcha); }
+.arb-n.regarde circle { fill: var(--kin-soft); stroke: var(--kin); stroke-width: 3; }
+.arb-n.compare circle { fill: var(--kin); }
+.arb-n.ecrit circle { fill: var(--sakura); }
+.arb-n.trouve circle { fill: var(--matcha); stroke: var(--matcha); }
+.arb-mem sup { font: 700 .6rem var(--mono); color: var(--shu); margin-left: 3px; }

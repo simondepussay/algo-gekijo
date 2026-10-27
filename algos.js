@@ -755,7 +755,506 @@ window.ALGOS = [
     { ja: ["循環キューで Hp と Tp だけでは区別しにくいのは？", ["空と満杯", "先頭と末尾", "偶数と奇数", "整列済みかどうか"], "空のときも満杯のときも Hp と Tp の関係が同じになるので、M でデータ数を管理する。"],
       en: ["In a circular queue, what is hard to tell apart with only Hp and Tp?", ["empty and full", "head and tail", "even and odd", "sorted or not"], "Empty and full give the same Hp/Tp relation, so M counts the items."] }
   ]
+},
+
+{
+  id: "liste", cat: "kouzou", jp: "リスト（追加・削除）", en: "Linked list (add / delete)", ordre: "O(n)",
+  resume: { ja: "データ D と「次の要素の添字」P を組にして、ポインタでつなぐ。並び順を変えるのにデータを動かさず、ポインタだけを書き換える。", en: "Each item pairs data D with P, the index of the next item. To change the order, only pointers are rewritten — the data never moves." },
+  cle: { ja: "追加：空きに格納 → 追加位置（prv と cur の間）を探す → P[I] ← cur、P[prv] ← I。削除：P[prv] ← P[cur] で飛ばす。", en: "Add: store in a free cell → find the spot (between prv and cur) → P[I] ← cur, P[prv] ← I. Delete: skip it with P[prv] ← P[cur]." },
+  base: 0, tab: "D, P", visu: "liste", ops: ["add", "del"], opsArg: { add: true, del: true }, opsExemple: "add 30, del 20",
+  prog: [
+    "大域: 整数型の配列: D, P    /* 要素数 5。D[I] = −1 は空き */",
+    "大域: 整数型: Top           /* 先頭要素の添字 */",
+    "○tsuika(整数型: num)        /* 昇順を保って追加 */",
+    "  整数型: I, prv, cur",
+    "  I ← 0",
+    "  while (D[I] ≠ −1)         /* 空き要素を探す */",
+    "    I ← I + 1",
+    "  endwhile",
+    "  D[I] ← num",
+    "  prv ← −1",
+    "  cur ← Top",
+    "  while ((cur ≠ −1) and (D[cur] < num))",
+    "    prv ← cur",
+    "    cur ← P[cur]",
+    "  endwhile",
+    "  P[I] ← cur",
+    "  if (prv = −1)",
+    "    Top ← I",
+    "  else",
+    "    P[prv] ← I",
+    "  endif",
+    "○sakujo(整数型: num)",
+    "  整数型: prv, cur",
+    "  prv ← −1",
+    "  cur ← Top",
+    "  while (D[cur] ≠ num)",
+    "    prv ← cur",
+    "    cur ← P[cur]",
+    "  endwhile",
+    "  if (prv = −1)",
+    "    Top ← P[cur]",
+    "  else",
+    "    P[prv] ← P[cur]",
+    "  endif",
+    "  D[cur] ← −1",
+    "  P[cur] ← −1"
+  ],
+  flow: [
+    { titre: "追加", noeuds: [
+      { t: "term", txt: "開始" },
+      { t: "io", txt: "num 入力", l: [3, 4] },
+      { t: "proc", txt: "I ← 0", l: 5 },
+      { t: "boucle", nom: "空き探索", cond: "D[I] ≠ −1", l: 6, lFin: 8, corps: [{ t: "proc", txt: "I ← I + 1", l: 7 }] },
+      { t: "proc", txt: "D[I] ← num", l: 9 },
+      { t: "proc", txt: "prv ← −1", l: 10 },
+      { t: "proc", txt: "cur ← Top", l: 11 },
+      { t: "boucle", nom: "位置探索", cond: "cur ≠ −1 かつ D[cur] < num", l: 12, lFin: 15, corps: [
+        { t: "proc", txt: "prv ← cur", l: 13 }, { t: "proc", txt: "cur ← P[cur]", l: 14 }] },
+      { t: "proc", txt: "P[I] ← cur", l: 16 },
+      { t: "si", cond: "prv = −1", l: 17, oui: [{ t: "proc", txt: "Top ← I", l: 18 }], non: [{ t: "proc", txt: "P[prv] ← I", l: 20 }] },
+      { t: "term", txt: "終了" }
+    ] },
+    { titre: "削除", noeuds: [
+      { t: "term", txt: "開始" },
+      { t: "io", txt: "num 入力", l: [22, 23] },
+      { t: "proc", txt: "prv ← −1", l: 24 },
+      { t: "proc", txt: "cur ← Top", l: 25 },
+      { t: "boucle", nom: "削除探索", cond: "D[cur] ≠ num", l: 26, lFin: 29, corps: [
+        { t: "proc", txt: "prv ← cur", l: 27 }, { t: "proc", txt: "cur ← P[cur]", l: 28 }] },
+      { t: "si", cond: "prv = −1", l: 30, oui: [{ t: "proc", txt: "Top ← P[cur]", l: 31 }], non: [{ t: "proc", txt: "P[prv] ← P[cur]", l: 33 }] },
+      { t: "proc", txt: "D[cur] ← −1", l: 35 },
+      { t: "proc", txt: "P[cur] ← −1", l: 36 },
+      { t: "term", txt: "終了" }
+    ] }
+  ],
+  donnees: { ops: [["add", 30], ["del", 20], ["add", 5]] },
+  prepare: () => ({ D: [20, 40, 10, -1, -1], P: [1, -1, 0, -1, -1] }),
+  hasard() {
+    const dans = new Set([10, 20, 40]), ops = [];
+    for (let k = 0; k < 4; k++) {
+      if (dans.size >= 5 || (dans.size > 1 && Math.random() < .4)) { const x = [...dans][Math.floor(Math.random() * dans.size)]; dans.delete(x); ops.push(["del", x]); }
+      else { let x; do { x = 1 + Math.floor(Math.random() * 60); } while (dans.has(x)); dans.add(x); ops.push(["add", x]); }
+    }
+    return ops;
+  },
+  vars: ["num", "I", "prv", "cur", "Top"], pointeurs: { I: "var(--kin)", prv: "var(--matcha)", cur: "var(--shu)" }, compteurs: ["cmp", "aff"],
+  trace: L => [L("操作", "operation"), "I", "prv", "cur", "Top", L("リスト", "list")],
+  ligne: (v, a, arr, o, L, tabs) => {
+    const ch = []; const vu = new Set();
+    for (let k = v.Top; k !== -1 && k !== undefined && !vu.has(k); k = tabs.P[k]) { ch.push(tabs.D[k]); vu.add(k); }
+    return [o.op ?? "—", v.I ?? "—", v.prv ?? "—", v.cur ?? "—", v.Top, ch.join("→")];
+  },
+  run(T) {
+    const v = T.v, L = T.L, D = i => T.t("D", i), P = i => T.t("P", i);
+    const chaine = () => { const r = []; for (let k = v.Top; k !== -1; k = P(k)) r.push(D(k)); return r.join(" → "); };
+    v.Top = 2;
+    T.step(2, L(`リストは ${chaine()}。Top = 2：先頭は D[2]。配列の中の位置と、つながる順番は別。`, `The list is ${chaine()}. Top = 2: the first item is D[2]. Position in the array and order in the list are different things.`));
+    T.ops.forEach(([op, x]) => {
+      v.num = x; v.I = undefined; v.prv = undefined; v.cur = undefined;
+      if (op === "add") {
+        T.step(3, L(`tsuika(${x})：${x} を昇順の正しい位置に追加する。`, `tsuika(${x}): add ${x} at its place in ascending order.`));
+        if (!T.tab("D").includes(-1)) { T.step(3, L("空きがないので、この例では追加しない。", "No free cell: this example skips the add."), { row: true, op: `add ${x}` }); return; }
+        if (chaine().split(" → ").includes(String(x))) { T.step(3, L(`${x} はもうリストにあるので、この例では追加しない。`, `${x} is already in the list: this example skips the add.`), { row: true, op: `add ${x}` }); return; }
+        T.step(4, L("I（空き要素）、prv（前の要素）、cur（今の要素）を用意。", "I (free cell), prv (previous item), cur (current item) are created."));
+        v.I = 0;
+        T.step(5, L("I ← 0：空き要素を先頭から探す。", "I ← 0: look for a free cell from the start."), { look: [0] });
+        while (true) {
+          const pris = D(v.I) !== -1;
+          T.step(6, L(`D[${v.I}] = ${D(v.I)} → ${pris ? "使用中" : "空き！"}。`, `D[${v.I}] = ${D(v.I)} → ${pris ? "in use" : "free!"}.`),
+            { look: [v.I], q: { texte: L(`D[${v.I}] = ${D(v.I)}。ここは空き？`, `D[${v.I}] = ${D(v.I)}. Is this cell free?`), choix: [L("空き", "free"), L("使用中", "in use")], bon: pris ? L("使用中", "in use") : L("空き", "free") } });
+          if (!pris) break;
+          v.I++;
+          T.step(7, L(`I ← I + 1 = ${v.I}。`, `I ← I + 1 = ${v.I}.`), { look: [v.I] });
+        }
+        T.tset("D", v.I, x);
+        T.step(9, L(`D[${v.I}] ← ${x}：データを空きに入れた。まだリストにはつながっていない。`, `D[${v.I}] ← ${x}: the data is in the free cell, but not linked to the list yet.`), { ecrit: [v.I] });
+        v.prv = -1;
+        T.step(10, L("prv ← −1：前の要素はまだない。", "prv ← −1: no previous item yet."));
+        v.cur = v.Top;
+        T.step(11, L(`cur ← Top = ${v.cur}：先頭からたどる。`, `cur ← Top = ${v.cur}: walk from the head.`), { look: [v.cur] });
+        while (true) {
+          const fin = v.cur === -1, plus = !fin && D(v.cur) < x;
+          if (!fin) T.c.cmp++;
+          T.step(12, fin ? L("cur = −1：リストの終わりに着いた → ここに追加。", "cur = −1: reached the end → add here.")
+            : L(`D[${v.cur}] = ${D(v.cur)} ${plus ? "<" : "≥"} ${x} → ${plus ? "まだ先へ" : "ここ（cur の前）に追加"}。`, `D[${v.cur}] = ${D(v.cur)} ${plus ? "<" : "≥"} ${x} → ${plus ? "keep going" : "add here (before cur)"}.`),
+            { cmp: fin ? [] : [v.cur], q: { texte: fin ? L("cur = −1。もっと先へ進む？", "cur = −1. Keep going?") : L(`D[cur] = ${D(v.cur)}、num = ${x}。もっと先へ進む？`, `D[cur] = ${D(v.cur)}, num = ${x}. Keep going?`),
+              choix: [L("進む", "keep going"), L("止まる", "stop")], bon: plus ? L("進む", "keep going") : L("止まる", "stop") } });
+          if (!plus) break;
+          v.prv = v.cur;
+          T.step(13, L(`prv ← cur = ${v.prv}。`, `prv ← cur = ${v.prv}.`));
+          v.cur = P(v.cur);
+          T.step(14, L(`cur ← P[${v.prv}] = ${v.cur}：次の要素へ。`, `cur ← P[${v.prv}] = ${v.cur}: next item.`),
+            { look: v.cur === -1 ? [] : [v.cur], q: { texte: L(`P[${v.prv}] は？（cur の新しい値）`, `What is P[${v.prv}]? (the new cur)`), choix: T.choix(v.cur, [v.prv, -1, v.Top]) } });
+        }
+        T.tset("P", v.I, v.cur);
+        T.step(16, L(`P[${v.I}] ← cur = ${v.cur}：新しい要素の次は cur。`, `P[${v.I}] ← cur = ${v.cur}: the new item points to cur.`), { ecrit: [v.I] });
+        const tete = v.prv === -1;
+        T.step(17, L(`prv = ${v.prv} → ${tete ? "先頭に追加する" : "途中に追加する"}。`, `prv = ${v.prv} → ${tete ? "add at the head" : "add in the middle"}.`),
+          { q: { texte: L("prv = −1 は？", "Is prv = −1?"), choix: [L("真", "true"), L("偽", "false")], bon: tete ? L("真", "true") : L("偽", "false") } });
+        if (tete) { v.Top = v.I; T.step(18, L(`Top ← ${v.I}：新しい先頭。リスト：${chaine()}。`, `Top ← ${v.I}: new head. List: ${chaine()}.`), { row: true, op: `add ${x}` }); }
+        else { T.tset("P", v.prv, v.I); T.step(20, L(`P[${v.prv}] ← ${v.I}：前の要素から新しい要素へつないだ。リスト：${chaine()}。`, `P[${v.prv}] ← ${v.I}: the previous item now points to the new one. List: ${chaine()}.`), { ecrit: [v.prv], row: true, op: `add ${x}` }); }
+      } else {
+        T.step(22, L(`sakujo(${x})：${x} を削除する。`, `sakujo(${x}): delete ${x}.`));
+        if (!chaine().split(" → ").includes(String(x))) { T.step(22, L(`${x} はリストにないので、この例では削除しない。`, `${x} is not in the list: this example skips the delete.`), { row: true, op: `del ${x}` }); return; }
+        T.step(23, L("prv と cur を用意。", "prv and cur are created."));
+        v.prv = -1; T.step(24, L("prv ← −1。", "prv ← −1."));
+        v.cur = v.Top; T.step(25, L(`cur ← Top = ${v.cur}。`, `cur ← Top = ${v.cur}.`), { look: [v.cur] });
+        while (true) {
+          const ne = D(v.cur) !== x; T.c.cmp++;
+          T.step(26, L(`D[${v.cur}] = ${D(v.cur)} ${ne ? "≠" : "="} ${x} → ${ne ? "次へ" : "見つかった"}。`, `D[${v.cur}] = ${D(v.cur)} ${ne ? "≠" : "="} ${x} → ${ne ? "next" : "found"}.`),
+            { cmp: [v.cur], q: { texte: L(`D[cur] = ${D(v.cur)}。削除するデータ？`, `D[cur] = ${D(v.cur)}. Is it the one to delete?`), choix: [L("はい", "yes"), L("いいえ", "no")], bon: ne ? L("いいえ", "no") : L("はい", "yes") } });
+          if (!ne) break;
+          v.prv = v.cur; T.step(27, L(`prv ← cur = ${v.prv}。`, `prv ← cur = ${v.prv}.`));
+          v.cur = P(v.cur); T.step(28, L(`cur ← P[${v.prv}] = ${v.cur}。`, `cur ← P[${v.prv}] = ${v.cur}.`), { look: [v.cur] });
+        }
+        const tete = v.prv === -1;
+        T.step(30, L(`prv = ${v.prv} → ${tete ? "先頭を削除する" : "途中を削除する"}。`, `prv = ${v.prv} → ${tete ? "delete the head" : "delete in the middle"}.`),
+          { q: { texte: L("prv = −1 は？", "Is prv = −1?"), choix: [L("真", "true"), L("偽", "false")], bon: tete ? L("真", "true") : L("偽", "false") } });
+        if (tete) { v.Top = P(v.cur); T.step(31, L(`Top ← P[cur] = ${v.Top}：2番目が新しい先頭。`, `Top ← P[cur] = ${v.Top}: the second item becomes the head.`)); }
+        else { T.tset("P", v.prv, P(v.cur)); T.step(33, L(`P[${v.prv}] ← P[${v.cur}] = ${P(v.prv)}：削除する要素を飛ばしてつないだ（論理的な削除）。`, `P[${v.prv}] ← P[${v.cur}] = ${P(v.prv)}: the link now skips the item (logical delete).`), { ecrit: [v.prv],
+          q: { texte: L(`P[${v.prv}] に入る値は？`, `What goes into P[${v.prv}]?`), choix: T.choix(P(v.cur), [v.cur, -1, v.prv]) } }); }
+        T.tset("D", v.cur, -1);
+        T.step(35, L(`D[${v.cur}] ← −1：データも消す（物理的な削除）。`, `D[${v.cur}] ← −1: clear the data too (physical delete).`), { ecrit: [v.cur] });
+        T.tset("P", v.cur, -1);
+        T.step(36, L(`P[${v.cur}] ← −1。リスト：${chaine()}。`, `P[${v.cur}] ← −1. List: ${chaine()}.`), { ecrit: [v.cur], row: true, op: `del ${x}` });
+      }
+    });
+    v.num = undefined; v.I = undefined; v.prv = undefined; v.cur = undefined;
+    T.step(1, L(`すべての操作が終わった。リスト：${chaine()}。`, `All operations done. List: ${chaine()}.`), { fin: true });
+  },
+  blancs: [
+    { ligne: 16, trou: "P[I] ← cur", choix: ["P[I] ← cur", "P[I] ← prv", "P[cur] ← I", "P[I] ← −1"],
+      expl: { ja: "新しい要素は cur の前に入るので、新しい要素の次は cur。", en: "The new item goes before cur, so its “next” is cur." } },
+    { ligne: 33, trou: "P[prv] ← P[cur]", choix: ["P[prv] ← P[cur]", "P[cur] ← P[prv]", "P[prv] ← cur", "Top ← cur"],
+      expl: { ja: "前の要素から、削除する要素の「次」へ直接つなぐ。これで cur はたどれなくなる。", en: "Link the previous item straight to the deleted item’s “next”: cur can no longer be reached." } }
+  ],
+  qcm: [
+    { ja: ["リストの利点は？", ["要素を移動せずに挿入・削除できる", "添字で直接アクセスできる", "常に整列されている", "メモリが少なくてすむ"], "ポインタを書き換えるだけで、データは動かさない。"],
+      en: ["What is the advantage of a linked list?", ["insert/delete without moving items", "direct access by index", "always sorted", "uses less memory"], "Only pointers are rewritten; the data never moves."] },
+    { ja: ["P[I] = −1 の意味は？", ["その要素がリストの最後", "その要素が空き", "その要素が先頭", "エラー"], "次の要素がない＝終端。"],
+      en: ["What does P[I] = −1 mean?", ["the item is the last one", "the cell is free", "the item is the head", "an error"], "No next item = end of the list."] }
+  ]
+},
+
+/* ═══════════════════════════ 木 ═══════════════════════════ */
+{
+  id: "haba", cat: "ki", jp: "幅優先探索", en: "Breadth-first traversal", ordre: "O(n)",
+  resume: { ja: "根から順に、同じ深さのノードを左から右へ取り出す。次に見るノードの添字をキューに入れて管理する。", en: "From the root, visit the nodes level by level, left to right. The indexes of the nodes still to visit wait in a queue." },
+  cle: { ja: "キューから1つ取り出して出力 → その左の子、右の子をキューの末尾へ。キューが空になったら終わり。", en: "Take one index from the queue and output it → put its left child, then its right child at the tail. Stop when the queue is empty." },
+  base: 0, tab: "Data, Lp, Rp, Q", visu: "arbre",
+  arbre: { data: "Data", lp: "Lp", rp: "Rp", root: () => 0 }, memoire: ["Data", "Lp", "Rp", "Q"], marques: { Q: ["Hp", "Tp"] },
+  prog: [
+    "大域: 整数型の配列: Data, Lp, Rp    /* 子がないときは −1 */",
+    "大域: 整数型: Root ← 0",
+    "○habayuusen()",
+    "  整数型の配列: Q    /* キュー：見るノードの添字 */",
+    "  整数型: Hp, Tp, I",
+    "  Q[0] ← Root",
+    "  Hp ← 0",
+    "  Tp ← 0",
+    "  while (Hp ≤ Tp)",
+    "    I ← Q[Hp]",
+    "    Hp ← Hp + 1",
+    "    Data[I] を出力する",
+    "    if (Lp[I] ≠ −1)",
+    "      Tp ← Tp + 1",
+    "      Q[Tp] ← Lp[I]",
+    "    endif",
+    "    if (Rp[I] ≠ −1)",
+    "      Tp ← Tp + 1",
+    "      Q[Tp] ← Rp[I]",
+    "    endif",
+    "  endwhile"
+  ],
+  flow: [{ noeuds: [
+    { t: "term", txt: "開始", l: [3, 4, 5] },
+    { t: "proc", txt: "Q[0] ← Root", l: 6 },
+    { t: "proc", txt: "Hp ← 0", l: 7 },
+    { t: "proc", txt: "Tp ← 0", l: 8 },
+    { t: "boucle", nom: "ループ1", cond: "Hp ≤ Tp", l: 9, lFin: 21, corps: [
+      { t: "proc", txt: "I ← Q[Hp]", l: 10 },
+      { t: "proc", txt: "Hp ← Hp + 1", l: 11 },
+      { t: "io", txt: "Data[I] 出力", l: 12 },
+      { t: "si", cond: "Lp[I] ≠ −1", l: 13, oui: [{ t: "proc", txt: "Tp ← Tp + 1", l: 14 }, { t: "proc", txt: "Q[Tp] ← Lp[I]", l: 15 }], non: [] },
+      { t: "si", cond: "Rp[I] ≠ −1", l: 17, oui: [{ t: "proc", txt: "Tp ← Tp + 1", l: 18 }, { t: "proc", txt: "Q[Tp] ← Rp[I]", l: 19 }], non: [] }
+    ] },
+    { t: "term", txt: "終了" }
+  ] }],
+  donnees: {},
+  prepare: () => ({ Data: [50, 30, 70, 20, 40, 60], Lp: [1, 3, 5, -1, -1, -1], Rp: [2, 4, -1, -1, -1, -1], Q: [null, null, null, null, null, null] }),
+  vars: ["I", "Hp", "Tp", "出力"], pointeurs: { I: "var(--shu)" }, compteurs: ["aff"],
+  trace: L => ["I", "Data[I]", "Hp", "Tp", L("キュー", "queue"), L("出力", "output")],
+  ligne: (v, a, arr, o, L, t) => [v.I ?? "—", v.I !== undefined ? t.Data[v.I] : "—", v.Hp ?? "—", v.Tp ?? "—",
+    v.Hp !== undefined ? t.Q.slice(v.Hp, v.Tp + 1).join(" ") || "（空）" : "—", v["出力"] || "—"],
+  run(T) {
+    const v = T.v, L = T.L, D = i => T.t("Data", i), Lp = i => T.t("Lp", i), Rp = i => T.t("Rp", i);
+    v["出力"] = "";
+    T.step(1, L("木は配列で表す：Data にノードの値、Lp・Rp に左・右の子の添字（いなければ −1）。", "The tree lives in arrays: Data holds the values, Lp and Rp the indexes of the left and right children (−1 if none)."));
+    T.step(3, L("habayuusen() を呼び出す。", "Call habayuusen()."));
+    T.tset("Q", 0, 0);
+    T.step(6, L("Q[0] ← Root：まず根をキューに入れる。", "Q[0] ← Root: first put the root in the queue."));
+    v.Hp = 0; T.step(7, L("Hp ← 0：取り出す位置。", "Hp ← 0: where to take from."));
+    v.Tp = 0; T.step(8, L("Tp ← 0：最後に入れた位置。", "Tp ← 0: where the last one went in."));
+    while (true) {
+      const cont = v.Hp <= v.Tp;
+      T.step(9, L(`Hp = ${v.Hp} ${cont ? "≤" : ">"} Tp = ${v.Tp} → ${cont ? "キューにまだある" : "キューが空：終了"}。`, `Hp = ${v.Hp} ${cont ? "≤" : ">"} Tp = ${v.Tp} → ${cont ? "the queue is not empty" : "the queue is empty: done"}.`),
+        { q: { texte: L(`Hp = ${v.Hp}、Tp = ${v.Tp}。ループは続く？`, `Hp = ${v.Hp}, Tp = ${v.Tp}. Does the loop go on?`), choix: [L("続く", "it goes on"), L("終わる", "it ends")], bon: cont ? L("続く", "it goes on") : L("終わる", "it ends") }, fin: !cont });
+      if (!cont) break;
+      v.I = T.t("Q", v.Hp);
+      T.step(10, L(`I ← Q[${v.Hp}] = ${v.I}：キューの先頭のノード。`, `I ← Q[${v.Hp}] = ${v.I}: the node at the head of the queue.`), { look: [v.I],
+        q: { texte: L("次に取り出されるノードの値は？", "Which node value comes out next?"), choix: T.choix(D(v.I), T.tab("Data")) } });
+      v.Hp++; T.step(11, L(`Hp ← Hp + 1 = ${v.Hp}。`, `Hp ← Hp + 1 = ${v.Hp}.`), { look: [v.I] });
+      T.fixer(v.I); v["出力"] = (v["出力"] ? v["出力"] + " " : "") + D(v.I);
+      T.step(12, L(`${D(v.I)} を出力。`, `Output ${D(v.I)}.`), { look: [v.I], row: true });
+      for (const [cote, f, l] of [[L("左", "left"), Lp, 13], [L("右", "right"), Rp, 17]]) {
+        const a = f(v.I) !== -1;
+        T.step(l, L(`${cote}の子 = ${f(v.I)} → ${a ? "いる" : "いない"}。`, `${cote} child = ${f(v.I)} → ${a ? "exists" : "none"}.`),
+          { look: [v.I], q: { texte: L(`ノード ${D(v.I)} に${cote}の子はいる？`, `Does node ${D(v.I)} have a ${cote} child?`), choix: [L("いる", "yes"), L("いない", "no")], bon: a ? L("いる", "yes") : L("いない", "no") } });
+        if (!a) continue;
+        v.Tp++; T.step(l + 1, L(`Tp ← Tp + 1 = ${v.Tp}。`, `Tp ← Tp + 1 = ${v.Tp}.`));
+        T.tset("Q", v.Tp, f(v.I));
+        T.step(l + 2, L(`Q[${v.Tp}] ← ${f(v.I)}：${cote}の子（${D(f(v.I))}）をキューの末尾へ。`, `Q[${v.Tp}] ← ${f(v.I)}: the ${cote} child (${D(f(v.I))}) joins the tail of the queue.`), { look: [f(v.I)] });
+      }
+    }
+  },
+  blancs: [
+    { ligne: 10, trou: "Q[Hp]", choix: ["Q[Hp]", "Q[Tp]", "Lp[I]", "Root"],
+      expl: { ja: "キューは先頭（Hp）から取り出す。先に入れたノードから順に見るので、浅いレベルから進む。", en: "The queue is read from its head (Hp): nodes come out in the order they went in, level by level." } }
+  ],
+  qcm: [
+    { ja: ["この木を幅優先探索すると、出力の順は？", ["50 30 70 20 40 60", "50 30 20 40 70 60", "20 30 40 50 60 70", "20 40 30 60 70 50"], "深さ 0 → 1 → 2 の順に、左から右へ。"],
+      en: ["What order does a breadth-first traversal of this tree give?", ["50 30 70 20 40 60", "50 30 20 40 70 60", "20 30 40 50 60 70", "20 40 30 60 70 50"], "Level 0 → 1 → 2, left to right."] },
+    { ja: ["幅優先探索で使うデータ構造は？", ["キュー", "スタック", "ヒープ", "ハッシュ表"], "先に入れたノードを先に見る（FIFO）。深さ優先ならスタック（または再帰）。"],
+      en: ["Which structure does a breadth-first traversal use?", ["queue", "stack", "heap", "hash table"], "First in, first out. Depth-first uses a stack (or recursion)."] }
+  ]
 }
+,
+
+/* 深さ優先探索 : trois ordres générés par le même modèle */
+...["saki", "naka", "ato"].map(o => {
+  const M = {
+    saki: { jp: "深さ優先探索（先行順）", en: "Depth-first: preorder", nom: "先行順（行きがけ）", nomEn: "preorder",
+      lignes: ["  Data[I] を出力する", "  if (Lp[I] ≠ −1)", "    junkai(Lp[I])", "  endif", "  if (Rp[I] ≠ −1)", "    junkai(Rp[I])", "  endif"],
+      out: 3, ifL: 4, callL: 5, ifR: 7, callR: 8, fin: 9, ordre: ["out", "L", "R"], res: "50 30 20 40 70 60",
+      resume: { ja: "ノードを出力してから、左の部分木、右の部分木の順に回る（節 → 左 → 右）。", en: "Output the node first, then visit the left subtree, then the right one (node → left → right)." } },
+    naka: { jp: "深さ優先探索（中間順）", en: "Depth-first: inorder", nom: "中間順（通りがけ）", nomEn: "inorder",
+      lignes: ["  if (Lp[I] ≠ −1)", "    junkai(Lp[I])", "  endif", "  Data[I] を出力する", "  if (Rp[I] ≠ −1)", "    junkai(Rp[I])", "  endif"],
+      out: 6, ifL: 3, callL: 4, ifR: 7, callR: 8, fin: 9, ordre: ["L", "out", "R"], res: "20 30 40 50 60 70",
+      resume: { ja: "左の部分木を回ってからノードを出力し、最後に右の部分木（左 → 節 → 右）。2分探索木なら小さい順に並ぶ。", en: "Visit the left subtree, output the node, then the right subtree (left → node → right). On a binary search tree, values come out sorted." } },
+    ato: { jp: "深さ優先探索（後行順）", en: "Depth-first: postorder", nom: "後行順（帰りがけ）", nomEn: "postorder",
+      lignes: ["  if (Lp[I] ≠ −1)", "    junkai(Lp[I])", "  endif", "  if (Rp[I] ≠ −1)", "    junkai(Rp[I])", "  endif", "  Data[I] を出力する"],
+      out: 9, ifL: 3, callL: 4, ifR: 6, callR: 7, fin: 9, ordre: ["L", "R", "out"], res: "20 40 30 60 70 50",
+      resume: { ja: "左、右の部分木を回り終えてから、最後にノードを出力する（左 → 右 → 節）。", en: "Visit the left and right subtrees first, output the node last (left → right → node)." } }
+  }[o];
+  const fOut = { t: "io", txt: "Data[I] 出力", l: M.out };
+  const fL = { t: "si", cond: "Lp[I] ≠ −1", l: M.ifL, oui: [{ t: "appel", txt: "木巡回(Lp[I])", l: M.callL }], non: [] };
+  const fR = { t: "si", cond: "Rp[I] ≠ −1", l: M.ifR, oui: [{ t: "appel", txt: "木巡回(Rp[I])", l: M.callR }], non: [] };
+  const corps = M.ordre.map(k => ({ out: fOut, L: fL, R: fR }[k]));
+  const autres = { saki: "naka", naka: "ato", ato: "saki" };
+  return {
+    id: "fukasa-" + o, cat: "ki", jp: M.jp, en: M.en, ordre: "O(n)",
+    resume: M.resume,
+    cle: { ja: "再帰：junkai が自分自身を呼び出す。呼び出しが終わると、呼び出した場所に戻って続きを実行する。3つの順序の違いは「出力する位置」だけ。", en: "Recursion: junkai calls itself. When a call ends, execution returns to where it was called and goes on. The three orders only differ by where the output is." },
+    base: 0, tab: "Data, Lp, Rp", visu: "arbre",
+    arbre: { data: "Data", lp: "Lp", rp: "Rp", root: () => 0 }, memoire: ["Data", "Lp", "Rp"],
+    prog: ["大域: 整数型の配列: Data, Lp, Rp    /* 最初は junkai(Root) で呼び出す */", `○junkai(整数型: I)    /* ${M.nom} */`, ...M.lignes],
+    flow: [{ noeuds: [{ t: "term", txt: "木巡回(I)", l: 2 }, ...corps, { t: "term", txt: "出口", l: M.fin }] }],
+    donnees: {},
+    prepare: () => ({ Data: [50, 30, 70, 20, 40, 60], Lp: [1, 3, 5, -1, -1, -1], Rp: [2, 4, -1, -1, -1, -1] }),
+    vars: ["I", "呼出し", "出力"], pointeurs: { I: "var(--shu)" }, compteurs: [],
+    trace: L => [L("呼出し", "calls"), "I", L("出力", "output")],
+    ligne: (v, a, arr, o2) => [v["呼出し"] || "—", v.I ?? "—", v["出力"] || "—"],
+    run(T) {
+      const v = T.v, L = T.L, D = i => T.t("Data", i), Lp = i => T.t("Lp", i), Rp = i => T.t("Rp", i), pile = [];
+      v["出力"] = ""; v["呼出し"] = "";
+      T.step(1, L(`junkai(Root) で根（${D(0)}）から始める。${M.nom}：出力の順番に注目。`, `Start from the root (${D(0)}) with junkai(Root). ${M.nomEn}: watch the output order.`));
+      const montrer = I => { v.I = I; v["呼出し"] = pile.map(D).join(" → "); };
+      const visite = I => {
+        pile.push(I); montrer(I);
+        T.step(2, L(`junkai(${I}) が始まる：ノード ${D(I)}。呼び出しの深さ ${pile.length}。`, `junkai(${I}) starts: node ${D(I)}. Call depth ${pile.length}.`), { look: [I] });
+        for (const k of M.ordre) {
+          if (k === "out") {
+            T.fixer(I); v["出力"] = (v["出力"] ? v["出力"] + " " : "") + D(I);
+            T.step(M.out, L(`${D(I)} を出力。`, `Output ${D(I)}.`), { look: [I], row: true });
+            continue;
+          }
+          const f = k === "L" ? Lp : Rp, cote = k === "L" ? L("左", "left") : L("右", "right");
+          const a = f(I) !== -1;
+          T.step(k === "L" ? M.ifL : M.ifR, L(`${D(I)} の${cote}の子 → ${a ? D(f(I)) : "いない"}。`, `${cote} child of ${D(I)} → ${a ? D(f(I)) : "none"}.`),
+            { look: [I], q: { texte: L(`${D(I)} に${cote}の子はいる？`, `Does ${D(I)} have a ${cote} child?`), choix: [L("いる", "yes"), L("いない", "no")], bon: a ? L("いる", "yes") : L("いない", "no") } });
+          if (!a) continue;
+          T.step(k === "L" ? M.callL : M.callR, L(`junkai(${f(I)}) を呼び出す：${cote}の部分木へ。今の続きは後で。`, `Call junkai(${f(I)}): go into the ${cote} subtree. The rest of this call waits.`), { look: [f(I)] });
+          visite(f(I));
+          montrer(I);
+          T.step(k === "L" ? M.callL : M.callR, L(`junkai(${I}) に戻ってきた：ノード ${D(I)} の続きから。`, `Back in junkai(${I}): carry on with node ${D(I)}.`), { look: [I] });
+        }
+        T.step(M.fin, L(`junkai(${I}) が終わる：呼び出し元へ戻る。`, `junkai(${I}) ends: return to the caller.`), { look: [I], fin: pile.length === 1 });
+        pile.pop();
+      };
+      visite(0);
+    },
+    blancs: [
+      { ligne: M.callL, trou: "junkai(Lp[I])", choix: ["junkai(Lp[I])", "junkai(Rp[I])", "junkai(I)", "junkai(Root)"],
+        expl: { ja: "左の子をあらたな「処理対象のノード」として、自分自身を呼び出す（再帰）。junkai(I) だと同じノードを永遠に呼び続ける。", en: "Call itself with the left child as the new node (recursion). junkai(I) would call the same node forever." } }
+    ],
+    qcm: [
+      { ja: [`この木を${M.nom}で回ると、出力の順は？`, [M.res, ...["50 30 20 40 70 60", "20 30 40 50 60 70", "20 40 30 60 70 50", "50 30 70 20 40 60"].filter(r => r !== M.res).slice(0, 3)], `${M.nom}：${M.ordre.map(k => ({ out: "節", L: "左", R: "右" })[k]).join(" → ")}。`],
+        en: [`What order does a ${M.nomEn} traversal of this tree give?`, [M.res, ...["50 30 20 40 70 60", "20 30 40 50 60 70", "20 40 30 60 70 50", "50 30 70 20 40 60"].filter(r => r !== M.res).slice(0, 3)], `${M.nomEn}: ${M.ordre.map(k => ({ out: "node", L: "left", R: "right" })[k]).join(" → ")}.`] },
+      { ja: ["深さ優先探索で、再帰の代わりに使えるデータ構造は？", ["スタック", "キュー", "ハッシュ表", "リスト"], "呼び出しの「戻り先」を積んでおく＝ LIFO。"],
+        en: ["What structure can replace recursion in a depth-first traversal?", ["stack", "queue", "hash table", "list"], "The “return points” pile up: LIFO."] }
+    ]
+  };
+})
+,
+
+{
+  id: "tansakugi", cat: "ki", jp: "2分探索木（探索・追加）", en: "Binary search tree (find / add)", ordre: "O(log n)",
+  resume: { ja: "どのノードでも「左の部分木 < 節 < 右の部分木」。探す値と比べて、小さければ左、大きければ右へ下りていく。", en: "At every node: left subtree < node < right subtree. Compare with the value: smaller → go left, bigger → go right." },
+  cle: { ja: "探索：見つかるか、子がない（−1）ところまで下りる。追加：同じように下りて、最後のノード J の子として新しいノードをつなぐ。", en: "Find: go down until found or until there is no child (−1). Add: go down the same way and hang the new node under the last node J." },
+  base: 0, tab: "Data, Lp, Rp", visu: "arbre", ops: ["find", "add"], opsArg: { find: true, add: true }, opsExemple: "find 30, add 35",
+  arbre: { data: "Data", lp: "Lp", rp: "Rp", root: () => 0 }, memoire: ["Data", "Lp", "Rp"],
+  prog: [
+    "大域: 整数型の配列: Data, Lp, Rp    /* 要素数 8 */",
+    "大域: 整数型: Root ← 0, N ← 5        /* N：使用中のノード数 */",
+    "○整数型: tansaku(整数型: num)",
+    "  整数型: I ← Root",
+    "  while ((I ≠ −1) and (Data[I] ≠ num))",
+    "    if (num < Data[I])",
+    "      I ← Lp[I]",
+    "    else",
+    "      I ← Rp[I]",
+    "    endif",
+    "  endwhile",
+    "  return I",
+    "○tsuika(整数型: num)",
+    "  整数型: I ← Root, J ← −1",
+    "  while (I ≠ −1)",
+    "    J ← I",
+    "    if (num < Data[I])",
+    "      I ← Lp[I]",
+    "    else",
+    "      I ← Rp[I]",
+    "    endif",
+    "  endwhile",
+    "  Data[N] ← num",
+    "  Lp[N] ← −1",
+    "  Rp[N] ← −1",
+    "  if (num < Data[J])",
+    "    Lp[J] ← N",
+    "  else",
+    "    Rp[J] ← N",
+    "  endif",
+    "  N ← N + 1"
+  ],
+  flow: [
+    { titre: "探索", noeuds: [
+      { t: "term", txt: "開始" },
+      { t: "io", txt: "num 入力", l: 3 },
+      { t: "proc", txt: "I ← Root", l: 4 },
+      { t: "boucle", nom: "ループ1", cond: "I ≠ −1 かつ Data[I] ≠ num", l: 5, lFin: 11, corps: [
+        { t: "si", cond: "num < Data[I]", l: 6, oui: [{ t: "proc", txt: "I ← Lp[I]", l: 7 }], non: [{ t: "proc", txt: "I ← Rp[I]", l: 9 }] }] },
+      { t: "io", txt: "I 出力", l: 12 },
+      { t: "term", txt: "終了" }
+    ] },
+    { titre: "追加", noeuds: [
+      { t: "term", txt: "開始" },
+      { t: "io", txt: "num 入力", l: [13, 14] },
+      { t: "boucle", nom: "ループ1", cond: "I ≠ −1", l: 15, lFin: 22, corps: [
+        { t: "proc", txt: "J ← I", l: 16 },
+        { t: "si", cond: "num < Data[I]", l: 17, oui: [{ t: "proc", txt: "I ← Lp[I]", l: 18 }], non: [{ t: "proc", txt: "I ← Rp[I]", l: 20 }] }] },
+      { t: "proc", txt: "Data[N] ← num", l: 23 },
+      { t: "proc", txt: "Lp[N] ← −1, Rp[N] ← −1", l: [24, 25] },
+      { t: "si", cond: "num < Data[J]", l: 26, oui: [{ t: "proc", txt: "Lp[J] ← N", l: 27 }], non: [{ t: "proc", txt: "Rp[J] ← N", l: 29 }] },
+      { t: "proc", txt: "N ← N + 1", l: 31 },
+      { t: "term", txt: "終了" }
+    ] }
+  ],
+  donnees: { ops: [["find", 30], ["add", 35], ["find", 55]] },
+  prepare: () => ({ Data: [40, 20, 60, 10, 30, null, null, null], Lp: [1, 3, -1, -1, -1, null, null, null], Rp: [2, 4, -1, -1, -1, null, null, null] }),
+  hasard() {
+    const dans = new Set([40, 20, 60, 10, 30]), ops = []; let n = 5;
+    for (let k = 0; k < 4; k++) {
+      let x; do { x = 1 + Math.floor(Math.random() * 80); } while (dans.has(x));
+      if (n < 8 && Math.random() < .5) { ops.push(["add", x]); dans.add(x); n++; }
+      else ops.push(["find", Math.random() < .6 ? [...dans][Math.floor(Math.random() * dans.size)] : x]);
+    }
+    return ops;
+  },
+  vars: ["num", "I", "J", "N"], pointeurs: { I: "var(--shu)", J: "var(--matcha)" }, compteurs: ["cmp"],
+  trace: L => [L("操作", "operation"), "I", "J", "Data[I]", L("判定", "test")],
+  ligne: (v, a, arr, o, L, t) => [o.op ?? "—", v.I ?? "—", v.J ?? "—", v.I !== undefined && v.I >= 0 ? t.Data[v.I] : "—", o.signe ?? "—"],
+  run(T) {
+    const v = T.v, L = T.L, D = i => T.t("Data", i), Lp = i => T.t("Lp", i), Rp = i => T.t("Rp", i);
+    v.N = 5;
+    T.step(2, L("2分探索木：どのノードでも 左 < 節 < 右。N = 5 個のノードが入っている。", "Binary search tree: at every node, left < node < right. N = 5 nodes are in use."));
+    T.ops.forEach(([op, x]) => {
+      v.num = x; v.I = undefined; v.J = undefined;
+      if (op === "find") {
+        T.step(3, L(`tansaku(${x})：${x} を探す。`, `tansaku(${x}): look for ${x}.`));
+        v.I = 0; T.step(4, L("I ← Root：根から下りていく。", "I ← Root: go down from the root."), { look: [0] });
+        while (true) {
+          const dedans = v.I !== -1, ne = dedans && D(v.I) !== x;
+          if (dedans) T.c.cmp++;
+          const signe = !dedans ? "−1" : !ne ? "=" : x < D(v.I) ? "<" : ">";
+          T.step(5, !dedans ? L("I = −1：子がない → 見つからなかった。", "I = −1: no child → not found.") : L(`Data[${v.I}] = ${D(v.I)} ${ne ? "≠" : "="} ${x} → ${ne ? "続ける" : "見つかった！"}`, `Data[${v.I}] = ${D(v.I)} ${ne ? "≠" : "="} ${x} → ${ne ? "go on" : "found!"}`),
+            { cmp: dedans ? [v.I] : [], row: true, op: `find ${x}`, signe, q: { texte: dedans ? L(`Data[I] = ${D(v.I)}、num = ${x}。ループは続く？`, `Data[I] = ${D(v.I)}, num = ${x}. Does the loop go on?`) : L("I = −1。ループは続く？", "I = −1. Does the loop go on?"),
+              choix: [L("続く", "it goes on"), L("終わる", "it ends")], bon: ne ? L("続く", "it goes on") : L("終わる", "it ends") } });
+          if (!ne) break;
+          const g = x < D(v.I);
+          T.step(6, L(`${x} ${g ? "<" : ">"} ${D(v.I)} → ${g ? "左" : "右"}へ。`, `${x} ${g ? "<" : ">"} ${D(v.I)} → go ${g ? "left" : "right"}.`), { cmp: [v.I],
+            q: { texte: L(`${x} と ${D(v.I)}。どちらへ下りる？`, `${x} and ${D(v.I)}. Which way down?`), choix: [L("左", "left"), L("右", "right")], bon: g ? L("左", "left") : L("右", "right") } });
+          const avant = v.I;
+          v.I = g ? Lp(v.I) : Rp(v.I);
+          T.step(g ? 7 : 9, L(`I ← ${g ? "Lp" : "Rp"}[${avant}] = ${v.I}${v.I === -1 ? "（子がない）" : ""}。`, `I ← ${g ? "Lp" : "Rp"}[${avant}] = ${v.I}${v.I === -1 ? " (no child)" : ""}.`), { look: v.I === -1 ? [] : [v.I] });
+        }
+        T.step(12, L(`return ${v.I}${v.I === -1 ? "：見つからなかった" : `：${x} は Data[${v.I}]`}。`, `return ${v.I}${v.I === -1 ? ": not found" : `: ${x} is in Data[${v.I}]`}.`), { trouve: v.I === -1 ? [] : [v.I] });
+      } else {
+        T.step(13, L(`tsuika(${x})：${x} を追加する。`, `tsuika(${x}): add ${x}.`));
+        if (v.N >= 8) { T.step(13, L("配列がいっぱいなので、この例では追加しない。", "The arrays are full: this example skips the add."), { row: true, op: `add ${x}` }); return; }
+        v.I = 0; v.J = -1;
+        T.step(14, L("I ← Root、J ← −1：J は「ひとつ前のノード」。", "I ← Root, J ← −1: J is “the node above”."), { look: [0] });
+        while (true) {
+          const cont = v.I !== -1;
+          T.step(15, cont ? L(`I = ${v.I} → まだ下りられる。`, `I = ${v.I} → we can still go down.`) : L(`I = −1 → ここが空き。新しいノードは J（${D(v.J)}）の子になる。`, `I = −1 → this is the free spot. The new node becomes a child of J (${D(v.J)}).`),
+            { q: { texte: L(`I = ${v.I}。ループは続く？`, `I = ${v.I}. Does the loop go on?`), choix: [L("続く", "it goes on"), L("終わる", "it ends")], bon: cont ? L("続く", "it goes on") : L("終わる", "it ends") } });
+          if (!cont) break;
+          v.J = v.I; T.step(16, L(`J ← I = ${v.J}。`, `J ← I = ${v.J}.`), { look: [v.J] });
+          const g = x < D(v.I); T.c.cmp++;
+          T.step(17, L(`${x} ${g ? "<" : ">"} ${D(v.I)} → ${g ? "左" : "右"}へ。`, `${x} ${g ? "<" : ">"} ${D(v.I)} → go ${g ? "left" : "right"}.`), { cmp: [v.I],
+            q: { texte: L(`${x} と ${D(v.I)}。どちらへ下りる？`, `${x} and ${D(v.I)}. Which way down?`), choix: [L("左", "left"), L("右", "right")], bon: g ? L("左", "left") : L("右", "right") } });
+          const avant = v.I;
+          v.I = g ? Lp(v.I) : Rp(v.I);
+          T.step(g ? 18 : 20, L(`I ← ${g ? "Lp" : "Rp"}[${avant}] = ${v.I}。`, `I ← ${g ? "Lp" : "Rp"}[${avant}] = ${v.I}.`), { look: v.I === -1 ? [] : [v.I] });
+        }
+        T.tset("Data", v.N, x);
+        T.step(23, L(`Data[${v.N}] ← ${x}：空いている ${v.N} 番に入れる。`, `Data[${v.N}] ← ${x}: store it in free cell ${v.N}.`), { ecrit: [v.N] });
+        T.tset("Lp", v.N, -1); T.step(24, L(`Lp[${v.N}] ← −1：まだ子はいない。`, `Lp[${v.N}] ← −1: no children yet.`));
+        T.tset("Rp", v.N, -1); T.step(25, L(`Rp[${v.N}] ← −1。`, `Rp[${v.N}] ← −1.`));
+        const g = x < D(v.J);
+        T.step(26, L(`${x} ${g ? "<" : ">"} Data[J] = ${D(v.J)} → ${g ? "左" : "右"}の子にする。`, `${x} ${g ? "<" : ">"} Data[J] = ${D(v.J)} → make it the ${g ? "left" : "right"} child.`), { look: [v.J] });
+        T.tset(g ? "Lp" : "Rp", v.J, v.N);
+        T.step(g ? 27 : 29, L(`${g ? "Lp" : "Rp"}[${v.J}] ← ${v.N}：つながった！`, `${g ? "Lp" : "Rp"}[${v.J}] ← ${v.N}: linked!`), { ecrit: [v.J, v.N] });
+        v.N++; T.step(31, L(`N ← N + 1 = ${v.N}。`, `N ← N + 1 = ${v.N}.`), { row: true, op: `add ${x}` });
+      }
+    });
+    v.num = undefined; v.I = undefined; v.J = undefined;
+    T.step(2, L("すべての操作が終わった。", "All operations done."), { fin: true });
+  },
+  blancs: [
+    { ligne: 6, trou: "num < Data[I]", choix: ["num < Data[I]", "num > Data[I]", "Lp[I] < Rp[I]", "I < num"],
+      expl: { ja: "小さい値は左の部分木にある。だから num が小さければ左（Lp）へ。", en: "Smaller values live in the left subtree: if num is smaller, go left (Lp)." } },
+    { ligne: 16, trou: "J ← I", choix: ["J ← I", "I ← J", "J ← Lp[I]", "J ← N"],
+      expl: { ja: "I が −1 になる前に、ひとつ前のノードを J に覚えておく。新しいノードは J の子になる。", en: "Before I becomes −1, remember the node above in J: the new node will hang under J." } }
+  ],
+  qcm: [
+    { ja: ["2分探索木を中間順でたどると、値はどう並ぶ？", ["昇順", "降順", "追加した順", "根からの深さ順"], "左 < 節 < 右 なので、左 → 節 → 右 でたどると小さい順。"],
+      en: ["In what order does an inorder traversal of a binary search tree give the values?", ["ascending", "descending", "insertion order", "by depth"], "left < node < right, so left → node → right is sorted."] },
+    { ja: ["2分探索木が偏って一直線になると、探索の計算量は？", ["O(n)", "O(log n)", "O(1)", "O(n²)"], "1本の線になると、線形探索と同じ。"],
+      en: ["If the tree degenerates into a single line, what does finding cost?", ["O(n)", "O(log n)", "O(1)", "O(n²)"], "A single line is just a linear search."] }
+  ]
+}
+
 
 ];
 })();
