@@ -53,6 +53,7 @@ function appliquerTextes() {
 const S = {
   algo: null, donnees: null, steps: [], cur: 0,
   mode: "voir", repondu: new Map(), attente: null, retour: null, serie: 0,
+  depuisAmie: 0, seuilAmie: 6,
   onglet: "blancs", maxVal: 1
 };
 
@@ -373,6 +374,8 @@ function humeur(h) {
 }
 
 /* ———————————— navigation ———————————— */
+/* une amie passe toutes les 7 à 11 étapes quand personne n'est venu entre-temps */
+function prochaineAmie() { S.depuisAmie = 0; S.seuilAmie = 7 + Math.floor(Math.random() * 5); }
 function avancer() {
   if (S.attente !== null) return false;
   if (S.cur >= S.steps.length - 1) return false;
@@ -383,7 +386,7 @@ function avancer() {
   }
   S.cur = n; humeur("parle");
   if (S.cur === S.steps.length - 1) fini();
-  else if (S.cur > 6 && Math.random() < .06) FETE.amie("focus", LANG);
+  else if (++S.depuisAmie >= S.seuilAmie && FETE.amie("focus", LANG)) prochaineAmie();
   maj();
   return true;
 }
@@ -403,6 +406,7 @@ function repondre(c, btn) {
   const q = S.steps[S.attente].q, ok = c === q.bon;
   S.repondu.set(S.attente, ok);
   S.retour = { ok, choisi: c };
+  prochaineAmie();
   humeur(ok ? "joie" : "oups");
   if (ok) {
     S.serie++;

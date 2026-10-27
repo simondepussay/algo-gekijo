@@ -150,7 +150,19 @@ const PHRASES = {
     ["疲れたら、ひと休みしてもいいからね{tasse}", "If you’re tired, a little break is okay{tasse}"],
     ["このペースなら試験もばっちり！", "At this pace, the exam will go great!"],
     ["次に何が起きるか、先に考えてからボタンを押してみて{pense}", "Guess what happens next before you press the button{pense}"],
-    ["ちょっと難しくても、ちゃんとできてるよ！", "Even when it’s hard, you’re doing super well!"]
+    ["ちょっと難しくても、ちゃんとできてるよ！", "Even when it’s hard, you’re doing super well!"],
+    ["この行で何が変わるか、押す前に予想してみて{pense}", "Before you click, guess what this line will change{pense}"],
+    ["箱の中の数字、ちゃんと見てる？{oeil}", "Are you watching the numbers in the boxes?{oeil}"],
+    ["トレース表、きれいに埋まってきたね{note}", "Your trace table is filling up nicely{note}"],
+    ["ループの1周で何が起きてるか、つかめてきた？", "Getting a feel for what one loop does?"],
+    ["いいリズム！その調子で進もう{noeud}", "Nice rhythm! Keep going like this{noeud}"],
+    ["ここまで来たのえらい！あと少しだよ{etoile}", "Proud you got this far! Almost there{etoile}"],
+    ["わからなくなったら、戻るボタンで1つ前に戻ってもいいよ", "If you get lost, the back button takes you one step back"],
+    ["バーの色にも意味があるよ。黄色は今見ているところ！", "The bar colours mean something: yellow is what’s being looked at!"],
+    ["変数が変わると、箱がピンクになるよ{coeur}", "When a variable changes, its box turns pink{coeur}"],
+    ["×の数字は、その行が何回実行されたか。ループが見えるね", "The ×n numbers show how many times each line ran: you can see the loops"],
+    ["ゆっくりでいいよ。わかることがいちばん大事{fleur}", "Slow is fine. Understanding matters most{fleur}"],
+    ["一緒にがんばろうね{coeur}", "Let’s do our best together{coeur}"]
   ],
   bravo: [
     ["正解！ちゃんと読めてるね{eclat}", "Correct! You’re reading it perfectly{eclat}"],
@@ -214,7 +226,7 @@ function amie(type, lang) {
     return true;
   }
   const now = Date.now();
-  if (type === "focus" && now - dernier < 25000) return false;
+  if (type === "focus" && now - dernier < 6000) return false;
   dernier = now;
   let k; do { k = Math.floor(Math.random() * AMIES.length); } while (k === derniereAmie);
   derniereAmie = k;
