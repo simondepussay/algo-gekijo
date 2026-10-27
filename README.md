@@ -25,6 +25,6 @@ Trois algorithmes pour commencer : 最大値, バブルソート, 二分探索.
 
 Ajouter un algorithme = ajouter une entrée dans `algos.js`.
 
-Site statique, sans dépendance : il suffit d’ouvrir `index.html` ou de le servir avec n’importe quel serveur.
+Site statique, sans dépendance, hébergé sur Azure Static Web Apps (offre Free) : chaque push sur `main` le redéploie. En local, il suffit d’ouvrir `index.html`.
 
 Les exemples sont écrits pour ce site. Les personnages sont des dessins SVG originaux.
