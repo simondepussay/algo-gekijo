@@ -2,7 +2,7 @@
 
 Comprendre les algorithmes du **基本情報技術者試験** (科目B) en les regardant avancer, une étape à la fois.
 
-**En ligne : https://simondepussay.github.io/algo-gekijo/**
+**En ligne : https://algo.simondepussay.com**
 
 Tout est visible sur un seul écran : le programme en 擬似言語 avec la ligne en cours, les variables dans des boîtes, le tableau en barres, le トレース表 qui se remplit et le nombre d’opérations. C’est l’utilisateur qui avance, d’une étape à la fois.
 
