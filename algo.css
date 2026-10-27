@@ -387,3 +387,4 @@ table.trace { border-collapse: separate; border-spacing: 0; width: 100%; font: .
 .arb-n.ecrit circle { fill: var(--sakura); }
 .arb-n.trouve circle { fill: var(--matcha); stroke: var(--matcha); }
 .arb-mem sup { font: 700 .6rem var(--mono); color: var(--shu); margin-left: 3px; }
+.lst-mem td.fixe { background: var(--matcha-soft); border-color: var(--matcha); font-weight: 700; }

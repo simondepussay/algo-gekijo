@@ -82,7 +82,8 @@ const arbre = {
       lignes.map(nom => `<tr><th>${esc(nom)}</th>${t[nom].map((z, i) => {
         const chg = prev && prev.tabs[nom][i] !== z ? " ecrit" : "";
         const m = (marques[nom] || []).filter(p => v[p] === i);
-        return `<td class="${chg}${z === null ? " libre" : ""}">${z === null ? "" : esc(z)}${m.length ? `<sup>${m.join(" ")}</sup>` : ""}</td>`;
+        const hors = z === null || (cfg.implicite && nom === cfg.tab && i >= nb && !st.fixe.includes(i));
+        return `<td class="${chg}${hors ? " libre" : ""}${cfg.implicite && st.fixe.includes(i) ? " fixe" : ""}">${z === null ? "" : esc(z)}${m.length ? `<sup>${m.join(" ")}</sup>` : ""}</td>`;
       }).join("")}</tr>`).join("");
   }
 };

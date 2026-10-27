@@ -1253,6 +1253,585 @@ window.ALGOS = [
     { ja: ["2分探索木が偏って一直線になると、探索の計算量は？", ["O(n)", "O(log n)", "O(1)", "O(n²)"], "1本の線になると、線形探索と同じ。"],
       en: ["If the tree degenerates into a single line, what does finding cost?", ["O(n)", "O(log n)", "O(1)", "O(n²)"], "A single line is just a linear search."] }
   ]
+},
+
+{
+  id: "heap", cat: "ki", jp: "ヒープ（追加・取出し）", en: "Heap (add / take)", ordre: "O(log n)",
+  resume: { ja: "親 ≥ 子 がどこでも成り立つ2分木。配列で表し、T[I] の子は T[2I + 1] と T[2I + 2]、親は T[(I − 1) ÷ 2]。根がいつも最大値。", en: "A binary tree where parent ≥ child everywhere. Stored in an array: the children of H[I] are H[2I + 1] and H[2I + 2], its parent H[(I − 1) ÷ 2]. The root is always the maximum." },
+  cle: { ja: "追加：末尾に入れて、親より大きい間は上へ交換。取出し：根を取り、末尾を根に移して、大きいほうの子と交換しながら下へ。", en: "Add: put it at the end, swap upward while bigger than its parent. Take: remove the root, move the last item to the root, swap downward with the bigger child." },
+  base: 0, tab: "H", visu: "arbre", ops: ["add", "take"], opsArg: { add: true }, opsExemple: "add 85, take",
+  arbre: { tab: "H", implicite: true, n: v => v.N }, memoire: ["H"],
+  prog: [
+    "大域: 整数型の配列: H    /* 要素数 8。どこでも 親 ≥ 子 */",
+    "大域: 整数型: N ← 5      /* 使用中の要素数 */",
+    "○tsuika(整数型: num)",
+    "  整数型: I, J, work",
+    "  I ← N",
+    "  H[I] ← num",
+    "  N ← N + 1",
+    "  J ← (I − 1) ÷ 2 の商    /* 親の添字 */",
+    "  while ((I > 0) and (H[J] < H[I]))",
+    "    work ← H[I]",
+    "    H[I] ← H[J]",
+    "    H[J] ← work",
+    "    I ← J",
+    "    J ← (I − 1) ÷ 2 の商",
+    "  endwhile",
+    "○整数型: toridashi()",
+    "  整数型: I, K, work, v",
+    "  v ← H[0]",
+    "  N ← N − 1",
+    "  H[0] ← H[N]",
+    "  I ← 0",
+    "  K ← 2 × I + 1    /* 左の子 */",
+    "  while (K < N)",
+    "    if ((K + 1 < N) and (H[K + 1] > H[K]))",
+    "      K ← K + 1",
+    "    endif",
+    "    if (H[I] < H[K])",
+    "      work ← H[I]",
+    "      H[I] ← H[K]",
+    "      H[K] ← work",
+    "      I ← K",
+    "      K ← 2 × I + 1",
+    "    else",
+    "      K ← N    /* 交換不要：ループを終える */",
+    "    endif",
+    "  endwhile",
+    "  return v"
+  ],
+  flow: [
+    { titre: "追加", noeuds: [
+      { t: "term", txt: "開始" },
+      { t: "io", txt: "num 入力", l: [3, 4] },
+      { t: "proc", txt: "I ← N", l: 5 },
+      { t: "proc", txt: "H[I] ← num", l: 6 },
+      { t: "proc", txt: "N ← N + 1", l: 7 },
+      { t: "proc", txt: "J ← (I − 1) ÷ 2", l: 8 },
+      { t: "boucle", nom: "再編成", cond: "I > 0 かつ H[J] < H[I]", l: 9, lFin: 15, corps: [
+        { t: "proc", txt: "work ← H[I]", l: 10 }, { t: "proc", txt: "H[I] ← H[J]", l: 11 }, { t: "proc", txt: "H[J] ← work", l: 12 },
+        { t: "proc", txt: "I ← J", l: 13 }, { t: "proc", txt: "J ← (I − 1) ÷ 2", l: 14 }] },
+      { t: "term", txt: "終了" }
+    ] },
+    { titre: "取出し", noeuds: [
+      { t: "term", txt: "開始", l: [16, 17] },
+      { t: "proc", txt: "v ← H[0]", l: 18 },
+      { t: "proc", txt: "N ← N − 1", l: 19 },
+      { t: "proc", txt: "H[0] ← H[N]", l: 20 },
+      { t: "proc", txt: "I ← 0", l: 21 },
+      { t: "proc", txt: "K ← 2 × I + 1", l: 22 },
+      { t: "boucle", nom: "再編成", cond: "K < N", l: 23, lFin: 36, corps: [
+        { t: "si", cond: "K + 1 < N かつ H[K + 1] > H[K]", l: 24, oui: [{ t: "proc", txt: "K ← K + 1", l: 25 }], non: [] },
+        { t: "si", cond: "H[I] < H[K]", l: 27, oui: [
+          { t: "proc", txt: "work ← H[I]", l: 28 }, { t: "proc", txt: "H[I] ← H[K]", l: 29 }, { t: "proc", txt: "H[K] ← work", l: 30 },
+          { t: "proc", txt: "I ← K", l: 31 }, { t: "proc", txt: "K ← 2 × I + 1", l: 32 }], non: [{ t: "proc", txt: "K ← N", l: 34 }] }] },
+      { t: "io", txt: "v 出力", l: 37 },
+      { t: "term", txt: "終了" }
+    ] }
+  ],
+  donnees: { ops: [["add", 85], ["take"], ["add", 40]] },
+  prepare: () => ({ H: [90, 70, 80, 30, 50, null, null, null] }),
+  hasard() {
+    const ops = []; let n = 5;
+    for (let k = 0; k < 4; k++) {
+      if (n >= 8 || (n > 1 && Math.random() < .4)) { ops.push(["take"]); n--; }
+      else { ops.push(["add", 10 + Math.floor(Math.random() * 89)]); n++; }
+    }
+    return ops;
+  },
+  vars: ["num", "I", "J", "K", "N", "v", "出力"], pointeurs: { I: "var(--shu)", J: "var(--matcha)", K: "var(--ai)" }, compteurs: ["cmp", "swap"],
+  trace: L => [L("操作", "operation"), "N", L("ヒープ", "heap"), L("出力", "output")],
+  ligne: (v, a, arr, o, L, t) => [o.op ?? "—", v.N, t.H.slice(0, v.N).join(" "), v["出力"] || "—"],
+  run(T) {
+    const v = T.v, L = T.L, H = i => T.t("H", i), quo = i => Math.max(0, Math.trunc((i - 1) / 2));
+    v.N = 5; v["出力"] = "";
+    T.step(2, L("ヒープ：どの親も子以上。だから根 H[0] がいつも最大。", "Heap: every parent ≥ its children, so the root H[0] is always the maximum."));
+    T.ops.forEach(([op, x]) => {
+      v.num = undefined; v.I = undefined; v.J = undefined; v.K = undefined; v.v = undefined;
+      if (op === "add") {
+        v.num = x;
+        T.step(3, L(`tsuika(${x})：${x} を追加する。`, `tsuika(${x}): add ${x}.`));
+        if (v.N >= 8) { T.step(3, L("いっぱいなので、この例では追加しない。", "Full: this example skips the add."), { row: true, op: `add ${x}` }); return; }
+        T.step(4, L("I（今の位置）、J（親の位置）。", "I (current position), J (parent position)."));
+        v.I = v.N; T.step(5, L(`I ← N = ${v.I}：いちばん後ろに入れる。`, `I ← N = ${v.I}: put it at the very end.`), { look: [v.I] });
+        T.tset("H", v.I, x); T.step(6, L(`H[${v.I}] ← ${x}。`, `H[${v.I}] ← ${x}.`), { ecrit: [v.I] });
+        v.N++; T.step(7, L(`N ← N + 1 = ${v.N}。`, `N ← N + 1 = ${v.N}.`), { look: [v.I] });
+        v.J = quo(v.I); T.step(8, L(`J ← (${v.I} − 1) ÷ 2 = ${v.J}：親の位置。`, `J ← (${v.I} − 1) ÷ 2 = ${v.J}: the parent.`), { look: [v.J],
+          q: { texte: L(`H[${v.I}] の親の添字は？`, `What is the parent index of H[${v.I}]?`), choix: T.choix(v.J, [v.I - 1, v.I * 2 + 1, Math.trunc(v.I / 2) === v.J ? v.J + 1 : Math.trunc(v.I / 2)]) } });
+        while (true) {
+          const monte = v.I > 0 && H(v.J) < H(v.I);
+          if (v.I > 0) T.c.cmp++;
+          T.step(9, v.I === 0 ? L("I = 0：根に着いた → 終了。", "I = 0: reached the root → done.") : L(`親 H[${v.J}] = ${H(v.J)} ${monte ? "<" : "≥"} H[${v.I}] = ${H(v.I)} → ${monte ? "親より大きいので交換" : "ヒープの形が正しい"}。`, `parent H[${v.J}] = ${H(v.J)} ${monte ? "<" : "≥"} H[${v.I}] = ${H(v.I)} → ${monte ? "bigger than its parent: swap" : "the heap is fine"}.`),
+            { cmp: v.I > 0 ? [v.J, v.I] : [], q: { texte: v.I === 0 ? L("I = 0。まだ上へ？", "I = 0. Keep going up?") : L(`親 ${H(v.J)}、子 ${H(v.I)}。交換する？`, `Parent ${H(v.J)}, child ${H(v.I)}. Swap?`), choix: [L("交換する", "swap"), L("しない", "no")], bon: monte ? L("交換する", "swap") : L("しない", "no") } });
+          if (!monte) break;
+          v.work = H(v.I); T.step(10, L(`work ← ${v.work}。`, `work ← ${v.work}.`));
+          T.tset("H", v.I, H(v.J)); T.step(11, L(`H[${v.I}] ← H[${v.J}]。`, `H[${v.I}] ← H[${v.J}].`), { ecrit: [v.I] });
+          T.tset("H", v.J, v.work); T.c.swap++; T.step(12, L(`H[${v.J}] ← work：${v.work} が1段上がった。`, `H[${v.J}] ← work: ${v.work} moved up one level.`), { ecrit: [v.J] });
+          v.I = v.J; T.step(13, L(`I ← J = ${v.I}。`, `I ← J = ${v.I}.`), { look: [v.I] });
+          v.J = quo(v.I); T.step(14, L(`J ← ${v.J}：新しい親。`, `J ← ${v.J}: the new parent.`), { look: [v.J] });
+        }
+        T.step(15, L(`追加完了。`, `Add done.`), { row: true, op: `add ${x}` });
+      } else {
+        T.step(16, L("toridashi()：最大値（根）を取り出す。", "toridashi(): take out the maximum (the root)."));
+        if (v.N === 0) { T.step(16, L("空なので、この例では取り出さない。", "Empty: this example skips."), { row: true, op: "take" }); return; }
+        T.step(17, L("I、K（大きいほうの子）、v（取り出す値）。", "I, K (the bigger child), v (the value taken)."));
+        v.v = H(0); T.step(18, L(`v ← H[0] = ${v.v}：根が最大値。`, `v ← H[0] = ${v.v}: the root is the maximum.`), { look: [0],
+          q: { texte: L("取り出される値は？", "Which value comes out?"), choix: T.choix(v.v, T.tab("H").filter(z => z !== null)) } });
+        v.N--; T.step(19, L(`N ← N − 1 = ${v.N}。`, `N ← N − 1 = ${v.N}.`));
+        T.tset("H", 0, H(v.N)); T.step(20, L(`H[0] ← H[${v.N}] = ${H(0)}：いちばん後ろを根に移す。ヒープが崩れた！`, `H[0] ← H[${v.N}] = ${H(0)}: the last item moves to the root. The heap is broken!`), { ecrit: [0] });
+        v.I = 0; T.step(21, L("I ← 0：根から下へ直していく。", "I ← 0: fix it from the root downward."), { look: [0] });
+        v.K = 1; T.step(22, L("K ← 2 × 0 + 1 = 1：左の子。", "K ← 2 × 0 + 1 = 1: the left child."));
+        while (true) {
+          const cont = v.K < v.N;
+          T.step(23, cont ? L(`K = ${v.K} < N = ${v.N} → 子がいる。`, `K = ${v.K} < N = ${v.N} → there is a child.`) : L(`K = ${v.K} ≥ N = ${v.N} → 終了。`, `K = ${v.K} ≥ N = ${v.N} → done.`));
+          if (!cont) break;
+          const droite = v.K + 1 < v.N && H(v.K + 1) > H(v.K);
+          if (v.K + 1 < v.N) T.c.cmp++;
+          T.step(24, v.K + 1 < v.N ? L(`左 ${H(v.K)}、右 ${H(v.K + 1)} → 大きいのは${droite ? "右" : "左"}。`, `left ${H(v.K)}, right ${H(v.K + 1)} → the bigger one is on the ${droite ? "right" : "left"}.`) : L("右の子はいない。", "No right child."),
+            { cmp: v.K + 1 < v.N ? [v.K, v.K + 1] : [v.K], q: v.K + 1 < v.N ? { texte: L(`左 ${H(v.K)}、右 ${H(v.K + 1)}。大きいのは？`, `Left ${H(v.K)}, right ${H(v.K + 1)}. Which is bigger?`), choix: [L("左", "left"), L("右", "right")], bon: droite ? L("右", "right") : L("左", "left") } : undefined });
+          if (droite) { v.K++; T.step(25, L(`K ← K + 1 = ${v.K}。`, `K ← K + 1 = ${v.K}.`), { look: [v.K] }); }
+          const desc = H(v.I) < H(v.K); T.c.cmp++;
+          T.step(27, L(`H[${v.I}] = ${H(v.I)} ${desc ? "<" : "≥"} H[${v.K}] = ${H(v.K)} → ${desc ? "子と交換して下へ" : "ヒープの形が正しい"}。`, `H[${v.I}] = ${H(v.I)} ${desc ? "<" : "≥"} H[${v.K}] = ${H(v.K)} → ${desc ? "swap with the child, go down" : "the heap is fine"}.`),
+            { cmp: [v.I, v.K], q: { texte: L(`親 ${H(v.I)}、子 ${H(v.K)}。交換する？`, `Parent ${H(v.I)}, child ${H(v.K)}. Swap?`), choix: [L("交換する", "swap"), L("しない", "no")], bon: desc ? L("交換する", "swap") : L("しない", "no") } });
+          if (desc) {
+            v.work = H(v.I); T.step(28, L(`work ← ${v.work}。`, `work ← ${v.work}.`));
+            T.tset("H", v.I, H(v.K)); T.step(29, L(`H[${v.I}] ← H[${v.K}]。`, `H[${v.I}] ← H[${v.K}].`), { ecrit: [v.I] });
+            T.tset("H", v.K, v.work); T.c.swap++; T.step(30, L(`H[${v.K}] ← work。`, `H[${v.K}] ← work.`), { ecrit: [v.K] });
+            v.I = v.K; T.step(31, L(`I ← K = ${v.I}。`, `I ← K = ${v.I}.`), { look: [v.I] });
+            v.K = 2 * v.I + 1; T.step(32, L(`K ← 2 × ${v.I} + 1 = ${v.K}。`, `K ← 2 × ${v.I} + 1 = ${v.K}.`));
+          } else { v.K = v.N; T.step(34, L("K ← N：ループを終える。", "K ← N: leave the loop.")); }
+        }
+        v["出力"] = (v["出力"] ? v["出力"] + ", " : "") + v.v;
+        T.step(37, L(`return ${v.v}。`, `return ${v.v}.`), { row: true, op: "take" });
+      }
+    });
+    v.num = undefined; v.I = undefined; v.J = undefined; v.K = undefined;
+    T.step(2, L("すべての操作が終わった。", "All operations done."), { fin: true });
+  },
+  blancs: [
+    { ligne: 8, trou: "(I − 1) ÷ 2 の商", choix: ["(I − 1) ÷ 2 の商", "I ÷ 2 の商", "2 × I + 1", "I − 1"],
+      expl: { ja: "添字が 0 から始まるとき、子は 2I + 1 と 2I + 2。だから親は (I − 1) ÷ 2。", en: "With indexes from 0, the children are 2I + 1 and 2I + 2, so the parent is (I − 1) ÷ 2." } },
+    { ligne: 27, trou: "H[I] < H[K]", choix: ["H[I] < H[K]", "H[I] > H[K]", "H[K] < H[K + 1]", "K < N"],
+      expl: { ja: "親のほうが小さいときだけ、親 ≥ 子 が崩れているので交換する。", en: "Only when the parent is smaller is “parent ≥ child” broken, so swap." } }
+  ],
+  qcm: [
+    { ja: ["ヒープ（親 ≥ 子）で、必ず最大値がある場所は？", ["根", "いちばん後ろ", "いちばん左の葉", "決まっていない"], "どの親も子以上なので、いちばん上が最大。"],
+      en: ["In a heap (parent ≥ child), where is the maximum always?", ["the root", "the last cell", "the leftmost leaf", "anywhere"], "Every parent ≥ its children, so the top is the biggest."] }
+  ]
+},
+
+{
+  id: "hash", cat: "tansaku", jp: "ハッシュ探索（オープンアドレス法）", en: "Hash search (open addressing)", ordre: "O(1)",
+  resume: { ja: "データからハッシュ関数（ここでは x mod 10）で格納位置を計算する。探すときも同じ計算で一発で位置がわかる。", en: "A hash function (here x mod 10) turns the data into its storage position. Searching uses the same calculation, so the position is known at once." },
+  cle: { ja: "違うデータが同じ位置になる＝シノニム（衝突）。そのときは次の位置（+1）を順に調べる。", en: "Two values landing on the same position = a synonym (collision). Then try the next position (+1), and so on." },
+  base: 0, tab: "T", ops: ["add", "find"], opsArg: { add: true, find: true }, opsExemple: "add 23, find 43",
+  prog: [
+    "大域: 整数型の配列: T    /* 要素数 10。空きは −1 */",
+    "○kakunou(整数型: x)",
+    "  整数型: I",
+    "  I ← x mod 10        /* ハッシュ関数 */",
+    "  while (T[I] ≠ −1)   /* 衝突：次の位置へ */",
+    "    I ← (I + 1) mod 10",
+    "  endwhile",
+    "  T[I] ← x",
+    "○整数型: tansaku(整数型: x)",
+    "  整数型: I",
+    "  I ← x mod 10",
+    "  while ((T[I] ≠ −1) and (T[I] ≠ x))",
+    "    I ← (I + 1) mod 10",
+    "  endwhile",
+    "  if (T[I] = x)",
+    "    return I",
+    "  else",
+    "    return −1",
+    "  endif"
+  ],
+  flow: [
+    { titre: "格納", noeuds: [
+      { t: "term", txt: "開始" },
+      { t: "io", txt: "x 入力", l: [2, 3] },
+      { t: "proc", txt: "I ← x % 10", l: 4 },
+      { t: "boucle", nom: "空き探索", cond: "T[I] ≠ −1", l: 5, lFin: 7, corps: [{ t: "proc", txt: "I ← (I + 1) % 10", l: 6 }] },
+      { t: "proc", txt: "T[I] ← x", l: 8 },
+      { t: "term", txt: "終了" }
+    ] },
+    { titre: "探索", noeuds: [
+      { t: "term", txt: "開始" },
+      { t: "io", txt: "x 入力", l: [9, 10] },
+      { t: "proc", txt: "I ← x % 10", l: 11 },
+      { t: "boucle", nom: "探索処理", cond: "T[I] ≠ −1 かつ x ≠ T[I]", l: 12, lFin: 14, corps: [{ t: "proc", txt: "I ← (I + 1) % 10", l: 13 }] },
+      { t: "si", cond: "x = T[I]", l: 15, oui: [{ t: "io", txt: "I 出力", l: 16 }], non: [{ t: "io", txt: "(−1) 出力", l: 18 }] },
+      { t: "term", txt: "終了" }
+    ] }
+  ],
+  donnees: { ops: [["add", 23], ["add", 41], ["add", 33], ["add", 58], ["add", 43], ["find", 43], ["find", 63]] },
+  prepare: () => Array(10).fill(null),
+  hasard() {
+    const ops = [], base = 1 + Math.floor(Math.random() * 9), dans = [];
+    for (let k = 0; k < 5; k++) { const x = (k % 2 ? 1 + Math.floor(Math.random() * 9) : base) + 10 * (1 + Math.floor(Math.random() * 8)); if (!dans.includes(x)) { dans.push(x); ops.push(["add", x]); } }
+    ops.push(["find", dans[dans.length - 1]], ["find", base + 90]);
+    return ops;
+  },
+  vars: ["x", "I"], pointeurs: { I: "var(--shu)" }, compteurs: ["cmp"],
+  trace: L => [L("操作", "operation"), "x mod 10", L("調べた位置", "positions tried"), L("結果", "result")],
+  ligne: (v, a, arr, o) => [o.op ?? "—", o.h ?? "—", o.essais ?? "—", o.res ?? "—"],
+  run(T) {
+    const v = T.v, L = T.L;
+    T.step(1, L("空の表（10 個）。ハッシュ関数は x mod 10（1の位）。", "An empty table of 10 cells. The hash function is x mod 10 (the last digit)."));
+    T.ops.forEach(([op, x]) => {
+      v.x = x; v.I = undefined;
+      const essais = [];
+      if (op === "add") {
+        T.step(2, L(`kakunou(${x})：${x} を格納する。`, `kakunou(${x}): store ${x}.`));
+        if (!T.arr().includes(null)) { T.step(2, L("表がいっぱいなので、この例では格納しない。", "The table is full: this example skips."), { row: true, op: `add ${x}` }); return; }
+        T.step(3, L("I を用意。", "I is created."));
+        v.I = x % 10; essais.push(v.I);
+        T.step(4, L(`I ← ${x} mod 10 = ${v.I}：ここに入れたい。`, `I ← ${x} mod 10 = ${v.I}: this is where it should go.`), { look: [v.I],
+          q: { texte: L(`${x} mod 10 は？`, `${x} mod 10 = ?`), choix: T.choix(v.I, [Math.trunc(x / 10), (v.I + 1) % 10, x % 7]) } });
+        while (true) {
+          const pris = T.a(v.I) !== null;
+          T.step(5, pris ? L(`T[${v.I}] = ${T.a(v.I)}：使用中！衝突（シノニム）。`, `T[${v.I}] = ${T.a(v.I)}: in use! A collision (synonym).`) : L(`T[${v.I}] は空き。`, `T[${v.I}] is free.`),
+            { look: [v.I], q: { texte: L(`T[${v.I}] は空いている？`, `Is T[${v.I}] free?`), choix: [L("空き", "free"), L("使用中", "in use")], bon: pris ? L("使用中", "in use") : L("空き", "free") } });
+          if (!pris) break;
+          v.I = (v.I + 1) % 10; essais.push(v.I);
+          T.step(6, L(`I ← (I + 1) mod 10 = ${v.I}：次の位置を調べる。`, `I ← (I + 1) mod 10 = ${v.I}: try the next position.`), { look: [v.I] });
+        }
+        T.set(v.I, x);
+        T.step(8, L(`T[${v.I}] ← ${x}。`, `T[${v.I}] ← ${x}.`), { ecrit: [v.I], row: true, op: `add ${x}`, h: x % 10, essais: essais.join("→"), res: `T[${v.I}]` });
+      } else {
+        T.step(9, L(`tansaku(${x})：${x} を探す。`, `tansaku(${x}): look for ${x}.`));
+        T.step(10, L("I を用意。", "I is created."));
+        v.I = x % 10; essais.push(v.I);
+        T.step(11, L(`I ← ${x} mod 10 = ${v.I}：まずここを見る。`, `I ← ${x} mod 10 = ${v.I}: look here first.`), { look: [v.I],
+          q: { texte: L(`${x} mod 10 は？`, `${x} mod 10 = ?`), choix: T.choix(v.I, [Math.trunc(x / 10), (v.I + 1) % 10, x % 7]) } });
+        let tours = 0;
+        while (true) {
+          const vide = T.a(v.I) === null, ne = !vide && T.a(v.I) !== x;
+          if (!vide) T.c.cmp++;
+          T.step(12, vide ? L(`T[${v.I}] は空き → ${x} はない。`, `T[${v.I}] is free → ${x} is not there.`) : L(`T[${v.I}] = ${T.a(v.I)} ${ne ? "≠" : "="} ${x} → ${ne ? "次へ" : "見つかった！"}`, `T[${v.I}] = ${T.a(v.I)} ${ne ? "≠" : "="} ${x} → ${ne ? "next" : "found!"}`),
+            { cmp: vide ? [] : [v.I], q: { texte: L(`T[${v.I}] = ${vide ? "空き" : T.a(v.I)}、x = ${x}。探索は続く？`, `T[${v.I}] = ${vide ? "free" : T.a(v.I)}, x = ${x}. Keep searching?`), choix: [L("続く", "keep going"), L("終わる", "stop")], bon: ne ? L("続く", "keep going") : L("終わる", "stop") } });
+          if (!ne || ++tours >= 10) break;
+          v.I = (v.I + 1) % 10; essais.push(v.I);
+          T.step(13, L(`I ← ${v.I}。`, `I ← ${v.I}.`), { look: [v.I] });
+        }
+        const ok = T.a(v.I) === x;
+        T.step(15, L(`T[I] = x は${ok ? "真" : "偽"}。`, `T[I] = x is ${ok ? "true" : "false"}.`));
+        T.step(ok ? 16 : 18, ok ? L(`return ${v.I}。比較 ${essais.length} 回。`, `return ${v.I}. ${essais.length} comparisons.`) : L("return −1：見つからなかった。", "return −1: not found."),
+          { trouve: ok ? [v.I] : [], row: true, op: `find ${x}`, h: x % 10, essais: essais.join("→"), res: ok ? v.I : -1 });
+      }
+    });
+    v.x = undefined; v.I = undefined;
+    T.step(1, L("すべての操作が終わった。", "All operations done."), { fin: true });
+  },
+  blancs: [
+    { ligne: 6, trou: "(I + 1) mod 10", choix: ["(I + 1) mod 10", "I + 1", "x mod 10", "(I − 1) mod 10"],
+      expl: { ja: "次の位置へ。mod 10 で、T[9] の次は T[0] に戻る。", en: "Go to the next position. mod 10 makes T[9] wrap back to T[0]." } }
+  ],
+  qcm: [
+    { ja: ["ハッシュ関数 x mod 10 で、23 と 43 の関係は？", ["シノニム（同じ位置）", "無関係", "23 が 43 の親", "整列されている"], "どちらも 1の位が 3 なので、同じ位置 3 になる。"],
+      en: ["With the hash function x mod 10, what are 23 and 43?", ["synonyms (same position)", "unrelated", "23 is 43’s parent", "sorted"], "Both end in 3, so both map to position 3."] },
+    { ja: ["衝突がなければ、ハッシュ探索の比較回数は？", ["1 回", "N 回", "log₂N 回", "N ÷ 2 回"], "計算した位置を一度見るだけ。"],
+      en: ["Without collisions, how many comparisons does a hash search need?", ["1", "N", "log₂N", "N ÷ 2"], "Just one look at the computed position."] }
+  ]
+},
+
+{
+  id: "heapsort", cat: "seiretsu", jp: "ヒープソート", en: "Heap sort", ordre: "O(n log n)",
+  resume: { ja: "① 配列をヒープ（親 ≥ 子）にする。② 根（最大値）を末尾と交換して確定し、残りをヒープに直す。これをくり返す。", en: "① Turn the array into a heap (parent ≥ child). ② Swap the root (the maximum) with the last cell to fix it, then repair the rest. Repeat." },
+  cle: { ja: "ヒープの根はいつも最大値。だから「根を後ろへ → 直す」で大きい順に後ろから確定していく。", en: "The root of a heap is always the maximum, so “root to the back → repair” fixes values from the back, biggest first." },
+  base: 0, tab: "T", visu: "arbre",
+  arbre: { tab: "T", implicite: true, n: (v, t) => (v.phase === 2 ? v.N : v.phase === 1 ? (v.I ?? 0) + 1 : v.phase === 3 ? t.T.length : 1) }, memoire: ["T"],
+  prog: [
+    "○heapsort(整数型の配列: T)",
+    "  整数型: N, I, K, P, work",
+    "  for (I を 1 から Tの要素数 − 1 まで 1 ずつ増やす)    /* ① ヒープを作る */",
+    "    K ← I",
+    "    P ← (K − 1) ÷ 2 の商",
+    "    while ((K > 0) and (T[P] < T[K]))",
+    "      work ← T[K]",
+    "      T[K] ← T[P]",
+    "      T[P] ← work",
+    "      K ← P",
+    "      P ← (K − 1) ÷ 2 の商",
+    "    endwhile",
+    "  endfor",
+    "  for (N を Tの要素数 − 1 から 1 まで 1 ずつ減らす)    /* ② 最大値を後ろへ */",
+    "    work ← T[0]",
+    "    T[0] ← T[N]",
+    "    T[N] ← work",
+    "    P ← 0",
+    "    K ← 1",
+    "    while (K < N)",
+    "      if ((K + 1 < N) and (T[K + 1] > T[K]))",
+    "        K ← K + 1",
+    "      endif",
+    "      if (T[P] < T[K])",
+    "        work ← T[P]",
+    "        T[P] ← T[K]",
+    "        T[K] ← work",
+    "        P ← K",
+    "        K ← 2 × P + 1",
+    "      else",
+    "        K ← N",
+    "      endif",
+    "    endwhile",
+    "  endfor"
+  ],
+  flow: [
+    { titre: "① ヒープ作成", noeuds: [
+      { t: "term", txt: "開始", l: [1, 2] },
+      { t: "boucle", nom: "ヒープ作成", cond: "I:1, I < N, 1", l: 3, lFin: 13, corps: [
+        { t: "proc", txt: "K ← I", l: 4 }, { t: "proc", txt: "P ← (K − 1) ÷ 2", l: 5 },
+        { t: "boucle", nom: "上へ", cond: "K > 0 かつ T[P] < T[K]", l: 6, lFin: 12, corps: [
+          { t: "proc", txt: "T[K] と T[P] を交換", l: [7, 8, 9] }, { t: "proc", txt: "K ← P", l: 10 }, { t: "proc", txt: "P ← (K − 1) ÷ 2", l: 11 }] }] },
+      { t: "term", txt: "②へ" }
+    ] },
+    { titre: "② 整列", noeuds: [
+      { t: "term", txt: "②" },
+      { t: "boucle", nom: "整列処理", cond: "N:N − 1, N > 0, −1", l: 14, lFin: 34, corps: [
+        { t: "proc", txt: "T[0] と T[N] を交換", l: [15, 16, 17] },
+        { t: "proc", txt: "P ← 0, K ← 1", l: [18, 19] },
+        { t: "boucle", nom: "下へ", cond: "K < N", l: 20, lFin: 33, corps: [
+          { t: "si", cond: "K + 1 < N かつ T[K + 1] > T[K]", l: 21, oui: [{ t: "proc", txt: "K ← K + 1", l: 22 }], non: [] },
+          { t: "si", cond: "T[P] < T[K]", l: 24, oui: [{ t: "proc", txt: "T[P] と T[K] を交換", l: [25, 26, 27] }, { t: "proc", txt: "P ← K, K ← 2 × P + 1", l: [28, 29] }], non: [{ t: "proc", txt: "K ← N", l: 31 }] }] }] },
+      { t: "term", txt: "終了" }
+    ] }
+  ],
+  donnees: { a: [35, 72, 18, 90, 51, 64] },
+  prepare: d => ({ T: d.a.slice() }),
+  vars: ["I", "N", "K", "P", "work"], pointeurs: { K: "var(--shu)", P: "var(--matcha)" }, compteurs: ["cmp", "swap"],
+  trace: L => [L("段階", "phase"), "I / N", L("実行後の T", "T after")],
+  ligne: (v, a, arr, o, L, t) => [v.phase === 1 ? L("① 作成", "① build") : v.phase === 2 ? L("② 整列", "② sort") : "—", v.phase === 1 ? v.I : v.phase === 2 ? v.N : "—", t.T.join("  ")],
+  run(T) {
+    const v = T.v, L = T.L, X = i => T.t("T", i), n = T.tab("T").length, quo = i => Math.max(0, Math.trunc((i - 1) / 2));
+    const echange = (i, j, l, msg) => { const w = X(i); T.tset("T", i, X(j)); T.tset("T", j, w); T.c.swap++; T.step(l, msg, { ecrit: [i, j] }); };
+    v.phase = 0;
+    T.step(1, L(`T = {${T.tab("T").join(", ")}} を昇順に整列する。木の形で見ると T[0] が根、T[I] の子は T[2I + 1] と T[2I + 2]。`, `Sort T = {${T.tab("T").join(", ")}}. Seen as a tree, T[0] is the root and the children of T[I] are T[2I + 1] and T[2I + 2].`));
+    T.step(2, L("N、I、K（子）、P（親）、work。", "N, I, K (child), P (parent), work."));
+    v.phase = 1;
+    for (v.I = 1; v.I < n; v.I++) {
+      T.step(3, L(`I = ${v.I}：T[${v.I}] = ${X(v.I)} をヒープに加える。`, `I = ${v.I}: add T[${v.I}] = ${X(v.I)} to the heap.`), { look: [v.I] });
+      v.K = v.I; T.step(4, L(`K ← ${v.K}。`, `K ← ${v.K}.`), { look: [v.K] });
+      v.P = quo(v.K); T.step(5, L(`P ← (${v.K} − 1) ÷ 2 = ${v.P}：親。`, `P ← (${v.K} − 1) ÷ 2 = ${v.P}: the parent.`), { look: [v.P] });
+      while (true) {
+        const monte = v.K > 0 && X(v.P) < X(v.K);
+        if (v.K > 0) T.c.cmp++;
+        T.step(6, v.K === 0 ? L("K = 0：根に着いた。", "K = 0: reached the root.") : L(`親 ${X(v.P)} ${monte ? "<" : "≥"} 子 ${X(v.K)} → ${monte ? "交換" : "そのまま"}。`, `parent ${X(v.P)} ${monte ? "<" : "≥"} child ${X(v.K)} → ${monte ? "swap" : "leave"}.`),
+          { cmp: v.K > 0 ? [v.P, v.K] : [], q: v.K > 0 ? { texte: L(`親 ${X(v.P)}、子 ${X(v.K)}。交換する？`, `Parent ${X(v.P)}, child ${X(v.K)}. Swap?`), choix: [L("交換する", "swap"), L("しない", "no")], bon: monte ? L("交換する", "swap") : L("しない", "no") } : undefined });
+        if (!monte) break;
+        v.work = X(v.K);
+        echange(v.K, v.P, 9, L(`T[${v.K}] と T[${v.P}] を交換：${X(v.P)} が上へ。`, `Swap T[${v.K}] and T[${v.P}]: ${X(v.P)} moves up.`));
+        v.K = v.P; T.step(10, L(`K ← P = ${v.K}。`, `K ← P = ${v.K}.`), { look: [v.K] });
+        v.P = quo(v.K); T.step(11, L(`P ← ${v.P}。`, `P ← ${v.P}.`));
+      }
+    }
+    T.step(13, L(`① 完了：ヒープができた。根 T[0] = ${X(0)} が最大値。`, `① done: the heap is built. The root T[0] = ${X(0)} is the maximum.`), { look: [0], row: true });
+    v.phase = 2; v.I = undefined;
+    for (v.N = n - 1; v.N >= 1; v.N--) {
+      T.step(14, L(`N = ${v.N}：根（最大値 ${X(0)}）を T[${v.N}] へ。`, `N = ${v.N}: the root (maximum ${X(0)}) goes to T[${v.N}].`), { look: [0, v.N],
+        q: { texte: L(`T[${v.N}] に確定する値は？`, `Which value gets fixed in T[${v.N}]?`), choix: T.choix(X(0), T.tab("T")) } });
+      v.work = X(0);
+      echange(0, v.N, 17, L(`T[0] と T[${v.N}] を交換。${X(v.N)} が確定 ★`, `Swap T[0] and T[${v.N}]. ${X(v.N)} is final ★`));
+      T.fixer(v.N);
+      v.P = 0; v.K = 1;
+      T.step(19, L("P ← 0、K ← 1：根から下へ直す。", "P ← 0, K ← 1: repair from the root down."), { look: [0] });
+      while (true) {
+        const cont = v.K < v.N;
+        T.step(20, cont ? L(`K = ${v.K} < N = ${v.N} → 子がいる。`, `K = ${v.K} < N = ${v.N} → there is a child.`) : L("子がいない → 直し終わり。", "No child → repair done."));
+        if (!cont) break;
+        const droite = v.K + 1 < v.N && X(v.K + 1) > X(v.K);
+        if (v.K + 1 < v.N) T.c.cmp++;
+        T.step(21, v.K + 1 < v.N ? L(`左 ${X(v.K)}、右 ${X(v.K + 1)} → 大きいのは${droite ? "右" : "左"}。`, `left ${X(v.K)}, right ${X(v.K + 1)} → bigger: ${droite ? "right" : "left"}.`) : L("右の子はいない。", "No right child."), { cmp: v.K + 1 < v.N ? [v.K, v.K + 1] : [v.K] });
+        if (droite) { v.K++; T.step(22, L(`K ← ${v.K}。`, `K ← ${v.K}.`), { look: [v.K] }); }
+        const desc = X(v.P) < X(v.K); T.c.cmp++;
+        T.step(24, L(`親 ${X(v.P)} ${desc ? "<" : "≥"} 子 ${X(v.K)} → ${desc ? "交換して下へ" : "ヒープに戻った"}。`, `parent ${X(v.P)} ${desc ? "<" : "≥"} child ${X(v.K)} → ${desc ? "swap and go down" : "the heap is fine again"}.`),
+          { cmp: [v.P, v.K], q: { texte: L(`親 ${X(v.P)}、子 ${X(v.K)}。交換する？`, `Parent ${X(v.P)}, child ${X(v.K)}. Swap?`), choix: [L("交換する", "swap"), L("しない", "no")], bon: desc ? L("交換する", "swap") : L("しない", "no") } });
+        if (desc) {
+          v.work = X(v.P);
+          echange(v.P, v.K, 27, L(`T[${v.P}] と T[${v.K}] を交換。`, `Swap T[${v.P}] and T[${v.K}].`));
+          v.P = v.K; v.K = 2 * v.P + 1;
+          T.step(29, L(`P ← ${v.P}、K ← ${v.K}。`, `P ← ${v.P}, K ← ${v.K}.`), { look: [v.P] });
+        } else { v.K = v.N; T.step(31, L("K ← N：ループを終える。", "K ← N: leave the loop.")); }
+      }
+      T.step(33, L("ヒープに戻った。", "Back to a heap."), { row: true });
+    }
+    T.fixer(0); v.phase = 3; v.N = undefined; v.K = undefined; v.P = undefined;
+    T.step(34, L(`完了！T = {${T.tab("T").join(", ")}}。`, `Done! T = {${T.tab("T").join(", ")}}.`), { fin: true });
+  },
+  blancs: [
+    { ligne: 17, trou: "T[N] ← work", choix: ["T[N] ← work", "T[0] ← work", "T[N] ← T[0]", "work ← T[N]"],
+      expl: { ja: "work には元の根（最大値）が入っている。それを後ろ T[N] に置いて確定する。", en: "work holds the old root (the maximum): put it at the back, T[N], where it is final." } }
+  ],
+  qcm: [
+    { ja: ["ヒープソートの計算量は？", ["O(n log n)", "O(n²)", "O(n)", "O(log n)"], "根から下へ直すのは木の高さ log n。それを n 回。"],
+      en: ["What does heap sort cost?", ["O(n log n)", "O(n²)", "O(n)", "O(log n)"], "Repairing from the root costs the tree height, log n, done n times."] }
+  ]
+},
+
+{
+  id: "shaker", cat: "seiretsu", jp: "シェーカーソート", en: "Shaker sort", ordre: "O(n²)",
+  resume: { ja: "交換法の改良。右へ進むときは最大値を右端へ、左へ戻るときは最小値を左端へ。往復しながら両端から確定させる。", en: "An improved bubble sort. Going right pushes the maximum to the right end; coming back pushes the minimum to the left end. Both ends get fixed as it shakes back and forth." },
+  cle: { ja: "L と R の間だけが未整列。右向きの後 R ← R − 1、左向きの後 L ← L + 1。", en: "Only the part between L and R is unsorted. After going right, R ← R − 1; after going left, L ← L + 1." },
+  base: 0, tab: "T",
+  prog: [
+    "○shaker(整数型の配列: T)",
+    "  整数型: L, R, I, work",
+    "  L ← 0",
+    "  R ← Tの要素数 − 1",
+    "  while (L < R)",
+    "    for (I を L から R − 1 まで 1 ずつ増やす)    /* 右へ */",
+    "      if (T[I] > T[I + 1])",
+    "        work ← T[I]",
+    "        T[I] ← T[I + 1]",
+    "        T[I + 1] ← work",
+    "      endif",
+    "    endfor",
+    "    R ← R − 1",
+    "    for (I を R から L + 1 まで 1 ずつ減らす)    /* 左へ */",
+    "      if (T[I − 1] > T[I])",
+    "        work ← T[I]",
+    "        T[I] ← T[I − 1]",
+    "        T[I − 1] ← work",
+    "      endif",
+    "    endfor",
+    "    L ← L + 1",
+    "  endwhile"
+  ],
+  flow: [{ noeuds: [
+    { t: "term", txt: "開始", l: [1, 2] },
+    { t: "proc", txt: "L ← 0", l: 3 },
+    { t: "proc", txt: "R ← N − 1", l: 4 },
+    { t: "boucle", nom: "整列ループ", cond: "L < R", l: 5, lFin: 22, corps: [
+      { t: "boucle", nom: "右方向", cond: "I:L, I < R, 1", l: 6, lFin: 12, corps: [
+        { t: "si", cond: "T[I] > T[I + 1]", l: 7, oui: [{ t: "proc", txt: "T[I] と T[I + 1] を交換", l: [8, 9, 10] }], non: [] }] },
+      { t: "proc", txt: "R ← R − 1", l: 13 },
+      { t: "boucle", nom: "左方向", cond: "I:R, I > L, −1", l: 14, lFin: 20, corps: [
+        { t: "si", cond: "T[I − 1] > T[I]", l: 15, oui: [{ t: "proc", txt: "T[I] と T[I − 1] を交換", l: [16, 17, 18] }], non: [] }] },
+      { t: "proc", txt: "L ← L + 1", l: 21 }] },
+    { t: "term", txt: "終了" }
+  ] }],
+  donnees: { a: [5, 1, 4, 2, 8, 0, 3] },
+  vars: ["L", "R", "I", "work"], pointeurs: { L: "var(--matcha)", R: "var(--ai)", I: "var(--shu)" }, compteurs: ["cmp", "swap"],
+  actif: (v, i) => v.L === undefined || v.R === undefined || (i >= v.L && i <= v.R),
+  trace: L => [L("向き", "direction"), "L", "R", L("実行後の T", "T after")],
+  ligne: (v, a, arr, o, L) => [o.sens ?? "—", v.L ?? "—", v.R ?? "—", arr.join("  ")],
+  run(T) {
+    const v = T.v, L = T.L;
+    const echange = (i, j, l) => { v.work = T.a(i); T.set(i, T.a(j)); T.set(j, v.work); T.c.swap++; T.step(l, L(`T[${i}] と T[${j}] を交換。`, `Swap T[${i}] and T[${j}].`), { ecrit: [i, j] }); };
+    T.step(1, L(`T = {${T.liste()}} を昇順に整列する。`, `Sort T = {${T.liste()}} in ascending order.`));
+    v.L = undefined; v.R = undefined; v.I = undefined; v.work = undefined;
+    T.step(2, L("L（未整列の左端）、R（右端）、I、work。", "L (left end of the unsorted part), R (right end), I, work."));
+    v.L = 0; T.step(3, L("L ← 0。", "L ← 0."));
+    v.R = T.n - 1; T.step(4, L(`R ← ${v.R}。`, `R ← ${v.R}.`));
+    while (true) {
+      const cont = v.L < v.R;
+      T.step(5, cont ? L(`L = ${v.L} < R = ${v.R} → まだ未整列の部分がある。`, `L = ${v.L} < R = ${v.R} → an unsorted part remains.`) : L("L ≥ R → 完了。", "L ≥ R → done."), { fin: !cont });
+      if (!cont) { for (let k = 0; k < T.n; k++) T.fixer(k); break; }
+      for (v.I = v.L; v.I < v.R; v.I++) {
+        T.step(6, L(`右へ：I = ${v.I}。`, `Going right: I = ${v.I}.`), { look: [v.I, v.I + 1] });
+        const ok = T.a(v.I) > T.a(v.I + 1); T.c.cmp++;
+        T.step(7, L(`T[${v.I}] = ${T.a(v.I)} ${ok ? ">" : "≤"} T[${v.I + 1}] = ${T.a(v.I + 1)}。`, `T[${v.I}] = ${T.a(v.I)} ${ok ? ">" : "≤"} T[${v.I + 1}] = ${T.a(v.I + 1)}.`),
+          { cmp: [v.I, v.I + 1], q: { texte: L(`${T.a(v.I)} と ${T.a(v.I + 1)}。交換する？`, `${T.a(v.I)} and ${T.a(v.I + 1)}. Swap?`), choix: [L("交換する", "swap"), L("しない", "no")], bon: ok ? L("交換する", "swap") : L("しない", "no") } });
+        if (ok) echange(v.I, v.I + 1, 10);
+      }
+      T.fixer(v.R);
+      v.R--; T.step(13, L(`右端 T[${v.R + 1}] が確定 ★ R ← ${v.R}。`, `The right end T[${v.R + 1}] is final ★ R ← ${v.R}.`), { row: true, sens: L("→ 右へ", "→ right") });
+      for (v.I = v.R; v.I > v.L; v.I--) {
+        T.step(14, L(`左へ：I = ${v.I}。`, `Going left: I = ${v.I}.`), { look: [v.I - 1, v.I] });
+        const ok = T.a(v.I - 1) > T.a(v.I); T.c.cmp++;
+        T.step(15, L(`T[${v.I - 1}] = ${T.a(v.I - 1)} ${ok ? ">" : "≤"} T[${v.I}] = ${T.a(v.I)}。`, `T[${v.I - 1}] = ${T.a(v.I - 1)} ${ok ? ">" : "≤"} T[${v.I}] = ${T.a(v.I)}.`),
+          { cmp: [v.I - 1, v.I], q: { texte: L(`${T.a(v.I - 1)} と ${T.a(v.I)}。交換する？`, `${T.a(v.I - 1)} and ${T.a(v.I)}. Swap?`), choix: [L("交換する", "swap"), L("しない", "no")], bon: ok ? L("交換する", "swap") : L("しない", "no") } });
+        if (ok) echange(v.I, v.I - 1, 18);
+      }
+      T.fixer(v.L);
+      v.L++; T.step(21, L(`左端 T[${v.L - 1}] が確定 ★ L ← ${v.L}。`, `The left end T[${v.L - 1}] is final ★ L ← ${v.L}.`), { row: true, sens: L("← 左へ", "← left") });
+    }
+  },
+  blancs: [
+    { ligne: 13, trou: "R ← R − 1", choix: ["R ← R − 1", "R ← R + 1", "L ← L + 1", "R ← L"],
+      expl: { ja: "右へ進むと最大値が右端に来て確定。だから右端を1つ縮める。", en: "Going right brings the maximum to the right end, where it is final: shrink the right end by one." } }
+  ],
+  qcm: [
+    { ja: ["シェーカーソートで、左へ戻る走査で左端に集まるのは？", ["最小値", "最大値", "中央値", "番兵"], "左向きに比べて交換すると、小さい値が左へ運ばれる。"],
+      en: ["In shaker sort, what does the leftward pass carry to the left end?", ["the minimum", "the maximum", "the median", "a sentinel"], "Comparing and swapping leftward carries small values to the left."] }
+  ]
+},
+
+{
+  id: "shell", cat: "seiretsu", jp: "シェルソート", en: "Shell sort", ordre: "O(n^1.25) 程度",
+  resume: { ja: "間隔 gap だけ離れた要素どうしで挿入法を行い、gap を半分ずつ小さくしていく。最後は gap = 1（ふつうの挿入法）。", en: "Run insertion sort on elements gap apart, then halve gap. The last pass, gap = 1, is a plain insertion sort." },
+  cle: { ja: "離れた要素を先に大きく動かしておくので、最後の挿入法ではほとんど動かさずにすむ。", en: "Far-apart elements are moved first, so the final insertion pass has almost nothing left to do." },
+  base: 0, tab: "T",
+  prog: [
+    "○shell(整数型の配列: T)",
+    "  整数型: gap, I, J, work",
+    "  gap ← Tの要素数 ÷ 2 の商",
+    "  while (gap > 0)",
+    "    for (I を gap から Tの要素数 − 1 まで 1 ずつ増やす)",
+    "      J ← I",
+    "      while ((J ≥ gap) and (T[J − gap] > T[J]))",
+    "        work ← T[J]",
+    "        T[J] ← T[J − gap]",
+    "        T[J − gap] ← work",
+    "        J ← J − gap",
+    "      endwhile",
+    "    endfor",
+    "    gap ← gap ÷ 2 の商",
+    "  endwhile"
+  ],
+  flow: [{ noeuds: [
+    { t: "term", txt: "開始", l: [1, 2] },
+    { t: "proc", txt: "gap ← N ÷ 2", l: 3 },
+    { t: "boucle", nom: "整列ループ", cond: "gap > 0", l: 4, lFin: 15, corps: [
+      { t: "boucle", nom: "整列処理", cond: "I:gap, I < N, 1", l: 5, lFin: 13, corps: [
+        { t: "proc", txt: "J ← I", l: 6 },
+        { t: "boucle", nom: "挿入処理", cond: "J ≥ gap かつ T[J − gap] > T[J]", l: 7, lFin: 12, corps: [
+          { t: "proc", txt: "T[J] と T[J − gap] を交換", l: [8, 9, 10] }, { t: "proc", txt: "J ← J − gap", l: 11 }] }] },
+      { t: "proc", txt: "gap ← gap ÷ 2", l: 14 }] },
+    { t: "term", txt: "終了" }
+  ] }],
+  donnees: { a: [62, 83, 18, 53, 7, 17, 95, 86] },
+  vars: ["gap", "I", "J", "work"], pointeurs: { I: "var(--matcha)", J: "var(--shu)" }, compteurs: ["cmp", "swap"],
+  trace: L => ["gap", L("実行後の T", "T after")],
+  ligne: (v, a, arr) => [v.gap ?? "—", arr.join("  ")],
+  run(T) {
+    const v = T.v, L = T.L;
+    T.step(1, L(`T = {${T.liste()}} を昇順に整列する。`, `Sort T = {${T.liste()}} in ascending order.`));
+    v.gap = undefined; v.I = undefined; v.J = undefined; v.work = undefined;
+    T.step(2, L("gap（間隔）、I、J、work。", "gap (the distance), I, J, work."));
+    v.gap = Math.trunc(T.n / 2);
+    T.step(3, L(`gap ← ${T.n} ÷ 2 = ${v.gap}：${v.gap} つ離れた要素どうしを比べる。`, `gap ← ${T.n} ÷ 2 = ${v.gap}: compare elements ${v.gap} apart.`));
+    while (true) {
+      const cont = v.gap > 0;
+      T.step(4, cont ? L(`gap = ${v.gap} > 0 → 続ける。`, `gap = ${v.gap} > 0 → go on.`) : L("gap = 0 → 完了。", "gap = 0 → done."), { fin: !cont });
+      if (!cont) { for (let k = 0; k < T.n; k++) T.fixer(k); break; }
+      for (v.I = v.gap; v.I < T.n; v.I++) {
+        T.step(5, L(`I = ${v.I}：T[${v.I}] を、gap = ${v.gap} 間隔のグループの中で挿入する。`, `I = ${v.I}: insert T[${v.I}] inside its group of elements ${v.gap} apart.`), { look: [v.I] });
+        v.J = v.I; T.step(6, L(`J ← ${v.J}。`, `J ← ${v.J}.`), { look: [v.J] });
+        while (true) {
+          const pos = v.J >= v.gap, ok = pos && T.a(v.J - v.gap) > T.a(v.J);
+          if (pos) T.c.cmp++;
+          T.step(7, !pos ? L(`J = ${v.J} < gap → グループの先頭に着いた。`, `J = ${v.J} < gap → reached the start of the group.`) : L(`T[${v.J - v.gap}] = ${T.a(v.J - v.gap)} ${ok ? ">" : "≤"} T[${v.J}] = ${T.a(v.J)} → ${ok ? "交換" : "そのまま"}。`, `T[${v.J - v.gap}] = ${T.a(v.J - v.gap)} ${ok ? ">" : "≤"} T[${v.J}] = ${T.a(v.J)} → ${ok ? "swap" : "leave"}.`),
+            { cmp: pos ? [v.J - v.gap, v.J] : [], q: pos ? { texte: L(`${T.a(v.J - v.gap)} と ${T.a(v.J)}（${v.gap} 離れている）。交換する？`, `${T.a(v.J - v.gap)} and ${T.a(v.J)} (${v.gap} apart). Swap?`), choix: [L("交換する", "swap"), L("しない", "no")], bon: ok ? L("交換する", "swap") : L("しない", "no") } : undefined });
+          if (!ok) break;
+          v.work = T.a(v.J); T.set(v.J, T.a(v.J - v.gap)); T.set(v.J - v.gap, v.work); T.c.swap++;
+          T.step(10, L(`T[${v.J}] と T[${v.J - v.gap}] を交換：${v.work} が ${v.gap} つ左へ跳んだ。`, `Swap T[${v.J}] and T[${v.J - v.gap}]: ${v.work} jumped ${v.gap} cells left.`), { ecrit: [v.J, v.J - v.gap] });
+          v.J -= v.gap; T.step(11, L(`J ← J − gap = ${v.J}。`, `J ← J − gap = ${v.J}.`), { look: [v.J] });
+        }
+      }
+      T.step(13, L(`gap = ${v.gap} の整列が終わった。`, `The gap = ${v.gap} pass is done.`), { row: true });
+      v.gap = Math.trunc(v.gap / 2);
+      T.step(14, L(`gap ← gap ÷ 2 = ${v.gap}。`, `gap ← gap ÷ 2 = ${v.gap}.`), { q: { texte: L("次の gap は？", "What is the next gap?"), choix: T.choix(v.gap, [v.gap * 2, v.gap + 1, 0]) } });
+    }
+  },
+  blancs: [
+    { ligne: 7, trou: "T[J − gap] > T[J]", choix: ["T[J − gap] > T[J]", "T[J − 1] > T[J]", "T[J] > T[J + gap]", "J > gap"],
+      expl: { ja: "比べるのは gap だけ離れた要素。gap = 1 のときだけ、ふつうの挿入法と同じになる。", en: "Compare elements gap apart. Only when gap = 1 is it the plain insertion sort." } }
+  ],
+  qcm: [
+    { ja: ["シェルソートの最後の段階（gap = 1）は何と同じ？", ["基本挿入法", "基本選択法", "基本交換法", "ヒープソート"], "間隔 1 で挿入法をすれば、ふつうの挿入法。"],
+      en: ["The last pass of shell sort (gap = 1) is the same as…?", ["insertion sort", "selection sort", "bubble sort", "heap sort"], "Insertion with a distance of 1 is plain insertion sort."] }
+  ]
 }
 
 
