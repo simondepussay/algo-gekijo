@@ -231,7 +231,7 @@ function amie(type, lang) {
   let k; do { k = Math.floor(Math.random() * AMIES.length); } while (k === derniereAmie);
   derniereAmie = k;
   const a = AMIES[k], p = choisir(PHRASES[type], type);
-  cote = -cote;
+  cote = 1;   /* toujours à droite : à gauche, elle cacherait le programme */
   const el = document.createElement("div");
   el.className = `amie ${cote > 0 ? "droite" : "gauche"}`;
   el.innerHTML = `<div class="amie-bulle"><b>${a.nom[lang]}</b>${avecIcones(p[lang === "ja" ? 0 : 1])}</div>${dessin(a)}`;

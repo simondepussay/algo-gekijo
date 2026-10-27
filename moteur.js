@@ -26,7 +26,7 @@ const ico = n => `<svg class="ico"><use href="#i-${n}"/></svg>`;
 const UI = {
   ja: {
     voir: ico("oeil") + "見る", deviner: ico("pense") + "予想する", donnees: ico("de") + "データ", exos: ico("crayon") + "練習",
-    "t-code": '<span class="jp">擬似言語</span>', "t-vars": '<span class="jp">変数</span>', "t-arr": '<span class="jp">配列</span> a',
+    "t-code": '<span class="jp">擬似言語</span>', "t-vars": '<span class="jp">変数</span>', "t-arr": '<span class="jp">配列</span>',
     "t-trace": '<span class="jp">トレース表</span>', "t-cpt": '<span class="jp">回数</span>',
     aide: "<kbd>→</kbd> <kbd>Space</kbd> 進む · <kbd>←</kbd> 戻る",
     debut: "最初から", arriere: "前のステップ (←)",
@@ -34,7 +34,7 @@ const UI = {
   },
   en: {
     voir: ico("oeil") + "Watch", deviner: ico("pense") + "Predict", donnees: ico("de") + "Data", exos: ico("crayon") + "Practice",
-    "t-code": '<span class="jp">擬似言語</span> · program', "t-vars": '<span class="jp">変数</span> · variables', "t-arr": '<span class="jp">配列</span> · array a',
+    "t-code": '<span class="jp">擬似言語</span> · program', "t-vars": '<span class="jp">変数</span> · variables', "t-arr": '<span class="jp">配列</span> · array',
     "t-trace": '<span class="jp">トレース表</span> · trace table', "t-cpt": '<span class="jp">回数</span> · cost',
     aide: "<kbd>→</kbd> <kbd>Space</kbd> next · <kbd>←</kbd> back",
     debut: "Restart", arriere: "Previous step (←)",
@@ -54,21 +54,23 @@ const S = {
   algo: null, donnees: null, steps: [], cur: 0,
   mode: "voir", repondu: new Map(), attente: null, retour: null, serie: 0,
   depuisAmie: 0, seuilAmie: 6,
-  onglet: "blancs", maxVal: 1
+  onglet: "blancs", maxVal: 1, vue: lire(CLE + "-vue", "ps")
 };
 
 /* ———————————— enregistrement ———————————— */
 function enregistrer(algo, donnees) {
-  const steps = [], v = {}, arr = donnees.a.slice(), c = { cmp: 0, swap: 0, aff: 0 }, fixe = [];
+  const steps = [], v = {}, c = { cmp: 0, swap: 0, aff: 0 }, fixe = [];
+  const arr = algo.prepare ? algo.prepare(donnees) : donnees.a.slice();
+  const base = algo.base ?? 1;
   let prev = {};
-  const a = i => arr[i - 1];
+  const a = i => arr[i - base];
   const T = {
-    v, c, x: donnees.x, L,
+    v, c, x: donnees.x, L, ops: donnees.ops || [],
     get n() { return arr.length; },
     a, arr: () => arr.slice(),
-    set(i, val) { arr[i - 1] = val; c.aff++; },
+    set(i, val) { arr[i - base] = val; c.aff++; },
     fixer(i) { if (!fixe.includes(i)) fixe.push(i); },
-    liste: () => arr.join(", "),
+    liste: () => arr.filter(z => z !== null).join(", "),
     /* bonne réponse + jusqu'à 3 distracteurs tirés de pool (+ voisins si besoin) */
     choix(bon, pool) {
       const s = new Set([String(bon)]);
@@ -86,7 +88,7 @@ function enregistrer(algo, donnees) {
       const q = o.q ? { texte: o.q.texte, choix: o.q.choix.map(String), bon: String(o.q.bon ?? o.q.choix.bon) } : null;
       steps.push({
         line, msg, v: vs, arr: arr.slice(), c: { ...c }, fixe: fixe.slice(), changed,
-        look: o.look || [], cmp: o.cmp || [], ecrit: o.ecrit || [], trouve: o.trouve || [],
+        look: o.look || [], cmp: o.cmp || [], ecrit: o.ecrit || [], trouve: o.trouve || [], partiel: o.partiel ?? null,
         live: algo.ligne(vs, a, arr.slice(), o, L).map(x => (x === undefined ? "—" : String(x))),
         row: !!o.row,
         q, fin: !!o.fin
@@ -99,31 +101,60 @@ function enregistrer(algo, donnees) {
 
 /* ———————————— mise en couleur du 擬似言語 ———————————— */
 function colorer(txt) {
-  return esc(txt)
-    .replace(/\b(endfor|endif|endwhile|elseif|else|for|if|while|return)\b/g, '<span class="k">$1</span>')
+  const [code, com] = txt.split("/*");
+  return esc(code)
+    .replace(/\b(endfor|endif|endwhile|elseif|else|for|if|while|return|and|or|not|mod)\b/g, '<span class="k">$1</span>')
+    .replace(/(大域)/g, '<span class="k">$1</span>')
     .replace(/(整数型|実数型|文字列型|論理型)(の配列)?/g, '<span class="t">$&</span>')
     .replace(/(を|から|まで|ずつ増やす|ずつ減らす|の要素数|の商)/g, '<span class="k">$1</span>')
-    .replace(/(←|○)/g, '<span class="fl">$1</span>');
+    .replace(/(←|○)/g, '<span class="fl">$1</span>') + (com !== undefined ? `<span class="com">/*${esc(com)}</span>` : "");
 }
 
 /* ———————————— construction ———————————— */
+const CATS = [
+  { id: "tansaku", ja: "探索", en: "Search" },
+  { id: "seiretsu", ja: "整列", en: "Sorting" },
+  { id: "kouzou", ja: "データ構造", en: "Data structures" }
+];
 function construireChoix() {
   const scores = lire(CLE, {});
-  $("#choix").innerHTML = ALGOS.map(al => {
+  $("#cats").innerHTML = CATS.map(c => `<button class="mode${c.id === S.algo.cat ? " actif" : ""}" data-cat="${c.id}">${L(c.ja, c.en)}</button>`).join("");
+  $("#choix").innerHTML = ALGOS.filter(al => al.cat === S.algo.cat).map(al => {
     const s = scores[al.id];
     const et = s === undefined ? "" : `<span class="etoiles">${ico("etoile").repeat(s >= .9 ? 3 : s >= .7 ? 2 : 1)}</span>`;
-    return `<button class="chip${al === S.algo ? " actif" : ""}" data-id="${al.id}" title="${esc(al.en)}"><span class="cat">${al.cat}</span><span class="jp">${esc(al.jp)}</span>${et}</button>`;
+    return `<button class="chip${al === S.algo ? " actif" : ""}" data-id="${al.id}" title="${esc(al.en)}"><span class="jp">${esc(al.jp)}</span>${et}</button>`;
   }).join("");
 }
 
 function construireIntro() {
   const al = S.algo;
-  $("#intro").innerHTML = `<span class="fr">${LANG === "en" ? esc(al.en) + " — " : ""}${esc(al.resume[LANG])}</span><b>${L("ポイント", "Key point")}</b>${esc(al.cle[LANG])}`;
+  $("#intro").innerHTML = `<span class="ordre">${L("計算量", "cost")} ${esc(al.ordre || "")}</span><span class="fr">${LANG === "en" ? esc(al.en) + " — " : ""}${esc(al.resume[LANG])}</span><b>${L("ポイント", "Key point")}</b>${esc(al.cle[LANG])}`;
 }
 
 function construireCode() {
   $("#code").innerHTML = S.algo.prog.map((l, i) =>
     `<li data-l="${i + 1}"><span class="num">${i + 1}</span><span class="fleche">▶</span><span class="txt">${colorer(l)}</span><span class="fois"></span></li>`).join("");
+  const f = S.algo.flow ? FLOW.dessiner(S.algo.flow) : null;
+  $("#flux").innerHTML = f ? f.svg : "";
+  S.taillefc = f ? [f.w, f.h] : null;
+  appliquerVue();
+}
+/* le 流れ図 prend toute la carte : agrandi jusqu'à ×1,6, réduit si besoin (défilement en dessous de ×0,7) */
+function ajusterFlux() {
+  const svg = $("#flux svg"), box = $("#flux");
+  if (!svg || !S.taillefc || box.hidden) return;
+  const [w, h] = S.taillefc;
+  const k = Math.max(.7, Math.min(1.6, (box.clientWidth - 6) / w, (box.clientHeight - 6) / h));
+  svg.style.width = `${Math.round(w * k)}px`;
+}
+addEventListener("resize", () => ajusterFlux());
+/* 擬似言語 (notre présentation) ou 流れ図 (celle du livre), mêmes numéros de ligne */
+function appliquerVue() {
+  const fc = S.vue === "fc" && !!S.algo.flow;
+  $("#code").hidden = fc; $("#flux").hidden = !fc;
+  document.querySelectorAll("#vues .mode").forEach(b => b.classList.toggle("actif", b.dataset.vue === (fc ? "fc" : "ps")));
+  $("#t-prog").textContent = fc ? L("流れ図", "Flowchart") : L("擬似言語", "Pseudocode");
+  ajusterFlux();
 }
 
 function construireVars() {
@@ -132,57 +163,78 @@ function construireVars() {
 }
 
 function construireStage() {
-  const n = S.donnees.a.length;
-  const slot = (i, fantome) => `<div class="slot${fantome ? " fantome" : ""}" data-i="${i}">
+  const n = S.steps[0].arr.length, b = S.algo.base ?? 1;
+  const slot = (i, fantome, garde) => `<div class="slot${fantome ? " fantome" : ""}${garde ? " garde" : ""}" data-i="${i}">
       <div class="colonne"><span class="v"></span><div class="bar"></div></div>
       <span class="idx">${i}</span><div class="drapeaux"></div></div>`;
-  let h = slot(0, true);
-  for (let i = 1; i <= n; i++) h += slot(i, false);
-  h += slot(n + 1, true);
+  let h = slot(b - 1, true);
+  for (let i = b; i < b + n; i++) h += slot(i, false, S.algo.garde && i === b + n - 1);
+  h += slot(b + n, true);
   $("#stage").innerHTML = h;
-  S.maxVal = Math.max(1, ...S.steps.flatMap(s => s.arr));
+  $("#nom-tab").textContent = S.algo.tab || "a";
+  S.maxVal = Math.max(1, ...S.steps.flatMap(s => s.arr.filter(z => z !== null)));
   $("#cible").textContent = S.donnees.x !== undefined ? L(`x = ${S.donnees.x} を探す`, `looking for x = ${S.donnees.x}`) : "";
 }
 
+function texteOps(ops) { return ops.map(([o, x]) => (x === undefined ? o : `${o} ${x}`)).join(", "); }
 function construireDonnees() {
   const d = S.donnees, al = S.algo;
-  $("#donnees").innerHTML = `<div class="form-d">
-      <label for="d-a">a =</label><input id="d-a" class="a" value="${esc(d.a.join(", "))}" inputmode="numeric">
+  const champ = al.ops
+    ? `<label for="d-ops">${L("操作", "ops")} =</label><input id="d-ops" class="a" value="${esc(texteOps(d.ops))}">`
+    : `<label for="d-a">${esc(al.tab || "a")} =</label><input id="d-a" class="a" value="${esc(d.a.join(", "))}" inputmode="numeric">`;
+  const aide = al.ops
+    ? L(`「${al.ops[0]} 10, ${al.ops[1]}」のように、カンマで区切って 1〜12 個。配列の大きさは 5。`, `Like “${al.ops[0]} 10, ${al.ops[1]}”, 1 to 12 operations separated by commas. The array holds 5 items.`)
+    : (al.trie ? L("2分探索は整列済みの配列でしか使えないので、自動で整列します。", "Binary search only works on a sorted array, so it is sorted automatically. ") : "") + L("0〜99 の整数を 2〜10 個。", "2 to 10 integers between 0 and 99.");
+  $("#donnees").innerHTML = `<div class="form-d">${champ}
       ${d.x !== undefined ? `<label for="d-x">x =</label><input id="d-x" class="x" value="${esc(d.x)}" inputmode="numeric">` : ""}
       <button class="petit plein" id="d-ok">${L("適用", "Apply")}</button>
       <button class="petit" id="d-hasard">${ico("de")}${L("ランダム", "Random")}</button>
       <button class="petit" id="d-defaut">${L("例に戻す", "Example")}</button>
     </div>
     <p class="erreur" id="d-err"></p>
-    <p class="muted small">${al.trie ? L("二分探索は整列済みの配列でしか使えないので、自動で整列します。", "Binary search only works on a sorted array, so it is sorted automatically. ") : ""}${L("0〜99 の整数を 2〜10 個。", "2 to 10 integers between 0 and 99.")}</p>`;
+    <p class="muted small">${aide}</p>`;
   $("#d-ok").addEventListener("click", appliquerDonnees);
-  $("#d-a").addEventListener("keydown", e => { if (e.key === "Enter") appliquerDonnees(); });
-  $("#d-x")?.addEventListener("keydown", e => { if (e.key === "Enter") appliquerDonnees(); });
+  document.querySelectorAll("#donnees input").forEach(inp => inp.addEventListener("keydown", e => { if (e.key === "Enter") appliquerDonnees(); }));
   $("#d-defaut").addEventListener("click", () => { charger(al, al.donnees); fermer(); });
   $("#d-hasard").addEventListener("click", () => {
-    const n = 5 + Math.floor(Math.random() * 4);
-    let a = Array.from({ length: n }, () => 1 + Math.floor(Math.random() * 60));
+    const r = k => 1 + Math.floor(Math.random() * k);
+    if (al.ops) {
+      const ops = []; let taille = 0;
+      for (let k = 0; k < 8; k++) {
+        if (taille > 0 && Math.random() < .35) { ops.push([al.ops[1]]); taille--; }
+        else { ops.push([al.ops[0], r(9) * 10 + r(9)]); taille++; }
+      }
+      charger(al, { ops }); fermer(); return;
+    }
+    let a = Array.from({ length: 5 + Math.floor(Math.random() * 4) }, () => r(60));
     if (al.trie) a = [...new Set(a)].sort((p, q) => p - q);
     const nd = { a };
-    if (al.donnees.x !== undefined) nd.x = Math.random() < .7 ? a[Math.floor(Math.random() * a.length)] : 1 + Math.floor(Math.random() * 60);
+    if (al.donnees.x !== undefined) nd.x = Math.random() < .7 ? a[Math.floor(Math.random() * a.length)] : r(60);
     charger(al, nd); fermer();
   });
 }
 
 function appliquerDonnees() {
-  const err = $("#d-err");
+  const err = $("#d-err"), al = S.algo;
+  if (al.ops) {
+    const ops = $("#d-ops").value.split(/[,、，]+/).map(t => t.trim()).filter(Boolean).map(t => t.split(/\s+/));
+    const ok = ops.length >= 1 && ops.length <= 12 && ops.every(([o, x]) =>
+      (o === al.ops[0] && Number.isInteger(+x) && +x >= 0 && +x <= 99) || (o === al.ops[1] && x === undefined));
+    if (!ok) { err.textContent = L(`「${al.ops[0]} 数」か「${al.ops[1]}」を、カンマで区切って 1〜12 個。`, `Use “${al.ops[0]} number” or “${al.ops[1]}”, 1 to 12 of them, separated by commas.`); return; }
+    charger(al, { ops: ops.map(([o, x]) => (x === undefined ? [o] : [o, +x])) }); fermer(); return;
+  }
   const a = $("#d-a").value.split(/[\s,、，]+/).filter(Boolean).map(Number);
   if (a.length < 2 || a.length > 10 || a.some(x => !Number.isInteger(x) || x < 0 || x > 99)) {
     err.textContent = L("0〜99 の整数を 2〜10 個、カンマで区切って入力してください。", "Enter 2 to 10 integers between 0 and 99, separated by commas.");
     return;
   }
-  const nd = { a: S.algo.trie ? a.sort((p, q) => p - q) : a };
+  const nd = { a: al.trie ? a.sort((p, q) => p - q) : a };
   if (S.donnees.x !== undefined) {
     const x = Number($("#d-x").value);
     if (!Number.isInteger(x)) { err.textContent = L("x は整数にしてください。", "x must be an integer."); return; }
     nd.x = x;
   }
-  charger(S.algo, nd); fermer();
+  charger(al, nd); fermer();
 }
 
 /* un exercice (空欄 ou 確認) : réponses, correction, confettis ou amie */
@@ -254,7 +306,13 @@ function majCode(st) {
     li.style.setProperty("--chaleur", (f / max * .9).toFixed(2));
     li.querySelector(".fois").textContent = f ? `×${f}` : "";
   });
-  const cur = document.querySelector("#code li.cur, #code li.prochain");
+  document.querySelectorAll("#flux .fn[data-l]").forEach(g => {
+    const ls = g.dataset.l.split(" ").map(Number);
+    g.classList.toggle("cur", prochain === null && ls.includes(st.line));
+    g.classList.toggle("prochain", ls.includes(prochain));
+    g.classList.toggle("vu", ls.some(l => fois[l]));
+  });
+  const cur = document.querySelector(S.vue === "fc" ? "#flux .fn.cur, #flux .fn.prochain" : "#code li.cur, #code li.prochain");
   if (cur && window.matchMedia("(min-width: 761px)").matches) cur.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
@@ -276,24 +334,25 @@ function majVars(st, prevSt) {
 }
 
 function majStage(st, prevSt) {
-  const n = st.arr.length, al = S.algo;
-  const zone = al.zone ? al.zone(st.v) : null;
+  const n = st.arr.length, al = S.algo, b = al.base ?? 1;
   document.querySelectorAll("#stage .slot").forEach(sl => {
     const i = +sl.dataset.i;
     const flags = Object.entries(al.pointeurs).filter(([nom]) => st.v[nom] === i);
     sl.querySelector(".drapeaux").innerHTML = flags.map(([nom, coul]) =>
       `<span class="drapeau" style="background:${coul};border-bottom-color:${coul}">${esc(nom)}</span>`).join("");
-    if (i === 0 || i === n + 1) { sl.classList.toggle("actif", flags.length > 0); return; }
-    const val = st.arr[i - 1];
-    sl.querySelector(".v").textContent = val;
-    sl.querySelector(".bar").style.height = `${8 + 92 * val / S.maxVal}%`;
-    const changeIci = prevSt && prevSt.arr[i - 1] !== val;
+    if (i === b - 1 || i === b + n) { sl.classList.toggle("actif", flags.length > 0); return; }
+    const val = st.arr[i - b];
+    sl.querySelector(".v").textContent = val ?? "";
+    sl.classList.toggle("vide", val === null);
+    sl.querySelector(".bar").style.height = val === null ? "6%" : `${8 + 92 * val / S.maxVal}%`;
+    const changeIci = prevSt && prevSt.arr[i - b] !== val;
     sl.classList.toggle("regarde", st.look.includes(i));
     sl.classList.toggle("compare", st.cmp.includes(i));
     sl.classList.toggle("ecrit", st.ecrit.includes(i) || !!changeIci);
     sl.classList.toggle("fixe", st.fixe.includes(i));
     sl.classList.toggle("trouve", st.trouve.includes(i));
-    sl.classList.toggle("hors", !!zone && (i < zone[0] || i > zone[1]));
+    sl.classList.toggle("hors", !!al.actif && val !== null && !al.actif(st.v, i, n));
+    sl.classList.toggle("partiel", st.partiel !== null && i <= st.partiel && !st.fixe.includes(i));
   });
 }
 
@@ -453,8 +512,10 @@ function ouvrir(id) {
   if (d.classList.contains("panneau")) { majExosDonnees(); d.show(); } else d.showModal();
 }
 function majExosDonnees() {
-  const d = S.donnees;
-  $("#exos-donnees").innerHTML = `<b>${L("データ", "Data")}</b><code>a = {${esc(d.a.join(", "))}}</code>${d.x !== undefined ? `<code>x = ${esc(d.x)}</code>` : ""}<span class="muted">${L(`要素数 ${d.a.length}`, `${d.a.length} elements`)}</span><button class="petit" id="exos-changer">${ico("de")}${L("変更", "Change")}</button>`;
+  const d = S.donnees, al = S.algo;
+  const quoi = d.ops ? `<code>${esc(texteOps(d.ops))}</code>`
+    : `<code>${esc(al.tab || "a")} = {${esc(d.a.join(", "))}}</code>${d.x !== undefined ? `<code>x = ${esc(d.x)}</code>` : ""}<span class="muted">${L(`要素数 ${d.a.length}`, `${d.a.length} elements`)}</span>`;
+  $("#exos-donnees").innerHTML = `<b>${L("データ", "Data")}</b>${quoi}<button class="petit" id="exos-changer">${ico("de")}${L("変更", "Change")}</button>`;
   $("#exos-changer").addEventListener("click", () => ouvrir("#d-donnees"));
 }
 function fermer() {
@@ -484,7 +545,7 @@ function charger(algo, donnees, garder = false) {
   try { steps = enregistrer(algo, donnees); }
   catch (e) { const err = $("#d-err"); if (err) err.textContent = e.message; return; }
   const cur = garder ? Math.min(S.cur, steps.length - 1) : 0;
-  Object.assign(S, { algo, donnees: { ...donnees, a: donnees.a.slice() }, steps, cur });
+  Object.assign(S, { algo, donnees: JSON.parse(JSON.stringify(donnees)), steps, cur });
   if (!garder) { S.attente = null; S.retour = null; S.repondu.clear(); S.serie = 0; }
   else if (S.attente !== null) S.attente = Math.min(S.attente, steps.length - 1);
   ecrire(CLE + "-dernier", algo.id);
@@ -505,6 +566,15 @@ $("#choix").addEventListener("click", e => {
   const b = e.target.closest(".chip"); if (!b) return;
   const al = ALGOS.find(a => a.id === b.dataset.id);
   if (al !== S.algo) charger(al, al.donnees);
+});
+$("#cats").addEventListener("click", e => {
+  const b = e.target.closest(".mode"); if (!b || b.dataset.cat === S.algo.cat) return;
+  const al = ALGOS.find(a => a.cat === b.dataset.cat);
+  charger(al, al.donnees);
+});
+$("#vues").addEventListener("click", e => {
+  const b = e.target.closest(".mode"); if (!b) return;
+  S.vue = b.dataset.vue; ecrire(CLE + "-vue", S.vue); appliquerVue(); maj();
 });
 $("#modes").addEventListener("click", e => { const b = e.target.closest(".mode"); if (b) choisirMode(b.dataset.mode); });
 $("#langues").addEventListener("click", e => { const b = e.target.closest(".mode"); if (b) choisirLangue(b.dataset.lang); });

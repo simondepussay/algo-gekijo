@@ -11,7 +11,14 @@ Tout est visible sur un seul écran : le programme en 擬似言語 avec la ligne
 - **練習** : 空欄 (compléter le code) et questions, à côté du programme.
 - Interface en **日本語** ou en **English**.
 
-Trois algorithmes pour commencer : 最大値, バブルソート, 二分探索.
+Deux présentations du même programme, avec **les mêmes numéros de ligne** :
+**擬似言語** et **流れ図** (organigramme JIS, comme dans les manuels : tableau `T[0]…T[N−1]`, variables en majuscules).
+
+| Catégorie | Algorithmes |
+|---|---|
+| 探索 | 最大値, 線形探索, 線形探索（番兵法）, 2分探索 |
+| 整列 | 基本選択法, 基本交換法（バブルソート）, 基本挿入法 |
+| データ構造 | スタック, キュー（循環） |
 
 ## Fichiers
 
@@ -21,6 +28,7 @@ Trois algorithmes pour commencer : 最大値, バブルソート, 二分探索.
 | `algo.css` | le style |
 | `algos.js` | les algorithmes : programme, données, déroulé ligne par ligne, exercices |
 | `moteur.js` | enregistre chaque étape et dessine l’étape courante |
+| `flow.js` | dessin des 流れ図 (symboles JIS) |
 | `fete.js` | confettis et personnages d’encouragement |
 
 Ajouter un algorithme = ajouter une entrée dans `algos.js`.

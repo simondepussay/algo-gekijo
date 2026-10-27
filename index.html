@@ -40,7 +40,7 @@
 
   <header class="haut">
     <h1 class="jp">アルゴ劇場</h1>
-    <nav id="choix" class="chips"></nav>
+    <nav id="cats" class="modes cats"></nav>
     <div class="outils">
       <div class="modes" id="modes">
         <button data-mode="voir" class="mode" data-t="voir"></button>
@@ -55,12 +55,15 @@
     </div>
   </header>
 
+  <nav id="choix" class="chips"></nav>
   <p id="intro" class="intro"></p>
 
   <main class="scene">
     <section class="carte code-carte">
-      <div class="titre-carte" data-t="t-code"></div>
+      <div class="titre-carte"><span class="jp" id="t-prog"></span>
+        <div class="modes vues" id="vues"><button class="mode" data-vue="ps">擬似言語</button><button class="mode" data-vue="fc">流れ図</button></div></div>
       <ol id="code" class="code"></ol>
+      <div id="flux" class="flux" hidden></div>
     </section>
 
     <div class="milieu">
@@ -88,7 +91,7 @@
       </section>
 
       <section class="carte stage-carte">
-        <div class="titre-carte"><span data-t="t-arr"></span><span id="cible" class="cible"></span></div>
+        <div class="titre-carte"><span data-t="t-arr"></span> <span class="jp" id="nom-tab"></span><span id="cible" class="cible"></span></div>
         <div id="stage" class="stage"></div>
       </section>
     </div>
@@ -136,6 +139,7 @@
 </dialog>
 
 <script src="algos.js"></script>
+<script src="flow.js"></script>
 <script src="fete.js"></script>
 <script src="moteur.js"></script>
 </body>

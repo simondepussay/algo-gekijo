@@ -43,7 +43,7 @@ button { cursor: pointer; }
 kbd { font: 600 11px var(--ui); border: 1px solid currentColor; border-radius: 4px; padding: 0 5px; }
 
 /* — un seul écran : tout est visible en même temps — */
-.ecran { height: 100vh; height: 100dvh; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 10px; padding: 10px 14px; max-width: 1600px; margin: 0 auto; }
+.ecran { height: 100vh; height: 100dvh; display: grid; grid-template-rows: auto auto auto minmax(0, 1fr) auto; gap: 10px; padding: 10px 14px; max-width: 1600px; margin: 0 auto; }
 .haut { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; }
 h1 { font: 700 1.35rem/1 var(--jp); margin: 0; }
 .outils { display: flex; gap: 8px; align-items: center; margin-left: auto; flex-wrap: wrap; }
@@ -309,3 +309,36 @@ table.trace { border-collapse: separate; border-spacing: 0; width: 100%; font: .
 .exos-donnees code { font: 700 .9rem var(--mono); background: var(--sheet); border-radius: 8px; padding: 1px 8px; }
 .exos-donnees .petit { margin-left: auto; }
 @media (max-width: 760px) { .fenetre.panneau { width: calc(100vw - 20px); } }
+
+/* — catégories, vues, 流れ図 — */
+.cats .mode { font-weight: 700; }
+.vues { margin-left: auto; font-size: .78rem; letter-spacing: 0; text-transform: none; }
+.vues .mode { padding: 1px 10px; font: 700 .76rem var(--jp); color: var(--ink); }
+.vues .mode.actif { color: var(--sheet); }
+.intro .ordre { display: inline-block; font: 700 .72rem var(--mono); background: var(--sheet); border: 1.5px solid var(--ink); border-radius: 999px; padding: 0 8px; margin-right: 8px; }
+.code .com { color: var(--muted); font-size: .85em; }
+.code-carte { display: flex; flex-direction: column; }
+.flux { overflow: auto; flex: 1; min-height: 0; }
+.flux svg.fc { display: block; height: auto; margin: 0 auto; }
+.fc .fc-forme { fill: var(--sheet); stroke: var(--ink); stroke-width: 1.6; transition: fill .25s, stroke .25s; }
+.fc .fc-trait { stroke: var(--ink); stroke-width: 1.4; fill: none; }
+.fc .fc-pointe { fill: var(--ink); }
+.fc text { font: 500 12.5px var(--ui); fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
+.fc .fc-cond { font-size: 11.5px; }
+.fc .fc-oui { font-size: 10.5px; fill: var(--muted); text-anchor: start; }
+.fc .fc-titre { font: 700 13px var(--mono); fill: var(--shu); }
+.fc .fc-no circle { fill: var(--paper); stroke: var(--muted); stroke-width: 1; }
+.fc .fc-no text { font: 700 10px var(--mono); fill: var(--muted); }
+.fc .fn.vu .fc-forme { fill: color-mix(in srgb, var(--ai-soft) 60%, var(--sheet)); }
+.fc .fn.cur .fc-forme { fill: var(--shu-soft); stroke: var(--shu); stroke-width: 2.6; }
+.fc .fn.cur .fc-no circle { fill: var(--shu); stroke: var(--shu); }
+.fc .fn.cur .fc-no text { fill: #fff; }
+.fc .fn.prochain .fc-forme { fill: var(--kin-soft); stroke: var(--kin); stroke-width: 2.6; }
+.fc .fn.prochain .fc-no circle { fill: var(--kin); stroke: var(--kin); }
+.fc .fn.prochain .fc-no text { fill: #fff; }
+
+/* — cases vides, 番兵, partie triée — */
+.slot.vide .bar { border-style: dashed; background: transparent; }
+.slot.garde .idx::after { content: " 番兵"; color: var(--kin); font-weight: 700; }
+.slot.garde .bar { border-color: var(--kin); }
+.slot.partiel .bar { background: color-mix(in srgb, var(--matcha-soft) 70%, var(--sheet)); border-style: dashed; border-color: var(--matcha); }
