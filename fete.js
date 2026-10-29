@@ -79,11 +79,17 @@ function pluie(n = 140) {
 }
 
 /* ———————————— les amies ———————————— */
+/* les chiens de Simon (photos) — prénoms provisoires, à remplacer */
+const CHIENS = [
+  { nom: { ja: "キャラメル", en: "Caramel" }, photos: ["a1", "a2", "a3", "a4", "a5"].map(n => `chiens/${n}.jpg`) },
+  { nom: { ja: "くり", en: "Kuri" }, photos: ["b1", "b2", "b3"].map(n => `chiens/${n}.jpg`) }
+];
 const AMIES = [
   { nom: { ja: "あかり", en: "Akari" }, cheveux: "#4a2a26", robe: "#e5484d", robe2: "#ffe1e0", noeud: "#b8202e", coiffure: "couettes", objet: "baguette" }
 ];
 
 function dessin(a) {
+  if (a.photos) return `<div class="chien-med"><img src="${a.photos[Math.floor(Math.random() * a.photos.length)]}" alt=""></div>`;
   const ch = a.cheveux;
   const coiffure = {
     couettes: `<ellipse cx="22" cy="62" rx="13" ry="26" fill="${ch}" transform="rotate(14 22 62)"/><ellipse cx="98" cy="62" rx="13" ry="26" fill="${ch}" transform="rotate(-14 98 62)"/>`,
@@ -201,6 +207,7 @@ const PHRASES = {
   ]
 };
 
+AMIES.push(...CHIENS);
 let visible = null, dernier = 0, cote = 1, derniereAmie = -1, dernierePhrase = {};
 function choisir(arr, cle) {
   const recentes = dernierePhrase[cle] || (dernierePhrase[cle] = []);
@@ -213,10 +220,11 @@ function choisir(arr, cle) {
 /* type : "erreur" | "focus" | "serie" | "fin" · lang : "ja" | "en" */
 function amie(type, lang) {
   if (calme && type === "focus") return false;
+  if (visible && !visible.isConnected) { clearInterval(visible._frames); clearTimeout(visible._depart); visible = null; }
   if (visible) {
     if (type === "focus" || !visible.isConnected || visible.classList.contains("part")) return false;
     const p = choisir(PHRASES[type], type), bulle = visible.querySelector(".amie-bulle");
-    bulle.innerHTML = `<b>${visible._nom[lang]}</b>${avecIcones(p[lang === "ja" ? 0 : 1])}`;
+    bulle.innerHTML = `<b>${visible._nom[lang]}</b>${avecIcones(p[lang === "ja" ? 0 : 1])}${visible.classList.contains("chien") ? (lang === "ja" ? " ワン！" : " Woof!") : ""}`;
     bulle.style.animation = "none"; void bulle.offsetWidth; bulle.style.animation = "";
     clearTimeout(visible._depart);
     const el = visible; el._depart = setTimeout(() => partir(el), 3600 + p[0].length * 40);
@@ -231,7 +239,9 @@ function amie(type, lang) {
   cote = 1;   /* toujours à droite : à gauche, elle cacherait le programme */
   const el = document.createElement("div");
   el.className = `amie ${cote > 0 ? "droite" : "gauche"}`;
-  el.innerHTML = `<div class="amie-bulle"><b>${a.nom[lang]}</b>${avecIcones(p[lang === "ja" ? 0 : 1])}</div>${dessin(a)}`;
+  const ouaf = a.photos ? (lang === "ja" ? " ワン！" : " Woof!") : "";
+  el.innerHTML = `<div class="amie-bulle"><b>${a.nom[lang]}</b>${avecIcones(p[lang === "ja" ? 0 : 1])}${ouaf}</div>${dessin(a)}`;
+  if (a.photos) el.classList.add("chien");
   el._nom = a.nom;
   el.addEventListener("click", () => partir(el));
   couche().appendChild(el);
