@@ -630,11 +630,14 @@ function basculerPointage(on) {
 }
 
 function contexteIA() {
-  const st = S.steps[S.cur], al = S.algo, vars = {};
-  al.vars.forEach(n => { if (st.v[n] !== undefined && st.v[n] !== "") vars[n] = st.v[n]; });
+  const st = S.steps[S.cur], prev = S.steps[S.cur - 1], al = S.algo, vars = {}, varsAvant = {};
+  al.vars.forEach(n => {
+    if (st.v[n] !== undefined && st.v[n] !== "") vars[n] = st.v[n];
+    if (prev && prev.v[n] !== undefined && prev.v[n] !== "") varsAvant[n] = prev.v[n];
+  });
   const donnees = st.tabs ? Object.entries(st.tabs).map(([k, t]) => `${k} = ${t.map(z => z ?? "·").join(" ")}`).join(" / ")
     : `${al.tab || "a"} = ${st.arr.map(z => z ?? "·").join(" ")}`;
-  return { algo: `${al.jp} (${al.en})`, prog: al.prog, ligne: st.line, etape: st.msg, vars, donnees, cible: chat.cible };
+  return { algo: `${al.jp} (${al.en})`, prog: al.prog, ligne: st.line, etape: st.msg, vars, varsAvant, donnees, cible: chat.cible };
 }
 
 function bulleChat(qui, texte) {
