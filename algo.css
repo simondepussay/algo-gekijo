@@ -431,3 +431,26 @@ table.trace { border-collapse: separate; border-spacing: 0; width: 100%; font: .
 .chien-tete { border-radius: 50%; object-fit: cover; border: 3px solid var(--ink); box-shadow: 0 0 0 3px var(--sakura); }
 @media (max-width: 760px) { .amie .chien-med { width: 96px; height: 96px; } .amie.chien .amie-bulle { margin-bottom: 50px; } }
 .intro .ordre.zero { background: var(--kin-soft); border-color: var(--kin); cursor: help; }
+
+/* — クキ先生 : pointer puis demander — */
+body.pointage :is(#code li, #flux .fn, #vars .boite, #stage .slot:not(.fantome), #trace td, .lst-n, .arb-n, .hc-ligne, #bulle, #intro, #compteurs .cpt) { cursor: help; }
+body.pointage :is(#code li, #vars .boite, #stage .slot:not(.fantome), #trace td, .lst-n, .hc-ligne, #bulle, #intro, #compteurs .cpt):hover { outline: 3px dashed var(--shu); outline-offset: 2px; border-radius: 8px; }
+body.pointage :is(#flux .fn, .arb-n):hover { filter: drop-shadow(0 0 4px var(--shu)); }
+.pointe-aide { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 55; background: var(--ink); color: var(--sheet); border-radius: 999px; padding: 6px 16px; font: 700 .85rem var(--maru); box-shadow: var(--press-sm); }
+.fenetre.chat { position: fixed; inset: auto 16px 80px auto; margin: 0; width: min(390px, calc(100vw - 32px)); max-height: min(70vh, 560px); display: none; flex-direction: column; gap: 8px; z-index: 45; }
+.fenetre.chat[open] { display: flex; }
+.chat .fenetre-haut { margin-bottom: 0; }
+.chat-titre { display: flex; align-items: center; gap: 8px; font: 700 1rem var(--maru); }
+.chat-ava { border-radius: 50%; object-fit: cover; border: 2px solid var(--ink); box-shadow: 0 0 0 2px var(--sakura); }
+.chat-cible { display: flex; gap: 6px; align-items: flex-start; background: var(--kin-soft); border-radius: 10px; padding: 6px 10px; font-size: .82rem; max-height: 4.5em; overflow: auto; }
+.chat-fil { flex: 1; min-height: 80px; overflow: auto; display: flex; flex-direction: column; gap: 8px; padding: 2px; }
+.chat-msg { max-width: 88%; padding: 7px 11px; border-radius: 14px; font-size: .9rem; line-height: 1.55; white-space: pre-wrap; border: 1.5px solid var(--ink); }
+.chat-msg.ia { align-self: flex-start; background: var(--paper); border-bottom-left-radius: 4px; }
+.chat-msg.moi { align-self: flex-end; background: var(--sakura-soft); border-bottom-right-radius: 4px; }
+.chat-msg.attente { animation: parle 1s infinite; color: var(--muted); }
+.chat-vite { display: flex; flex-wrap: wrap; gap: 5px; }
+.chat-vite .petit { font-size: .78rem; padding: 2px 10px; }
+.chat-form { display: flex; gap: 6px; }
+.chat-form input { flex: 1; min-width: 0; border: 2px solid var(--ink); border-radius: 999px; background: var(--paper); padding: 6px 12px; }
+.chat-form .suivant { height: 38px; padding: 0 16px; font-size: .9rem; }
+.chat-note { font-size: .72rem; margin: 0; text-align: center; }

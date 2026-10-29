@@ -25,6 +25,7 @@ const ico = n => `<svg class="ico"><use href="#i-${n}"/></svg>`;
 
 const UI = {
   ja: {
+    pointer: ico("doigt") + "質問",
     voir: ico("oeil") + "見る", deviner: ico("pense") + "予想する", donnees: ico("de") + "データ", exos: ico("crayon") + "練習",
     "t-code": '<span class="jp">擬似言語</span>', "t-vars": '<span class="jp">変数</span>', "t-arr": '<span class="jp">配列</span>',
     "t-trace": '<span class="jp">トレース表</span>', "t-cpt": '<span class="jp">回数</span>',
@@ -33,6 +34,7 @@ const UI = {
     "o-blancs": '<span class="jp">空欄</span> · コードを完成させる', "o-qcm": '<span class="jp">確認</span> · 確認問題'
   },
   en: {
+    pointer: ico("doigt") + "Ask",
     voir: ico("oeil") + "Watch", deviner: ico("pense") + "Predict", donnees: ico("de") + "Data", exos: ico("crayon") + "Practice",
     "t-code": '<span class="jp">擬似言語</span> · program', "t-vars": '<span class="jp">変数</span> · variables', "t-arr": '<span class="jp">配列</span> · array',
     "t-trace": '<span class="jp">トレース表</span> · trace table', "t-cpt": '<span class="jp">回数</span> · cost',
@@ -596,6 +598,104 @@ function choisirLangue(l) {
   charger(S.algo, S.donnees, true); /* les textes des étapes sont réenregistrés dans la nouvelle langue */
 }
 
+/* ———————————— クキ先生 : pointer un élément et demander une explication (IA) ———————————— */
+const CIBLES = "#code li, #flux .fn, #vars .boite, #stage .slot:not(.fantome), #trace td, .lst-n, .arb-n, .hc-ligne, #bulle, #intro, #compteurs .cpt";
+const chat = { cible: "", hist: [], attente: false };
+let pointage = false;
+
+function decrire(el) {
+  const txt = e => (e?.textContent || "").replace(/\s+/g, " ").trim();
+  if (el.matches("#code li")) return L(`擬似言語の ${el.dataset.l}行目：`, `pseudocode line ${el.dataset.l}: `) + txt(el.querySelector(".txt"));
+  if (el.matches("#flux .fn")) return L(`流れ図の箱（${el.dataset.l}行目）：`, `flowchart box (line ${el.dataset.l}): `) + [...el.querySelectorAll("text")].filter(t => !t.closest(".fc-no")).map(txt).join(" / ");
+  if (el.matches("#vars .boite")) return L(`変数 ${el.dataset.v} = `, `variable ${el.dataset.v} = `) + txt(el.querySelector(".val"));
+  if (el.matches("#stage .slot")) {
+    const etats = ["compare", "fixe", "hors", "partiel", "trouve", "garde"].filter(c => el.classList.contains(c));
+    return `${S.algo.tab || "a"}[${el.dataset.i}] = ${txt(el.querySelector(".v")) || L("（空き）", "(empty)")}${etats.length ? `（${etats.join(", ")}）` : ""}`;
+  }
+  if (el.matches("#trace td")) {
+    const tr = el.parentElement, k = [...tr.children].indexOf(el), th = el.closest("table").querySelectorAll("th")[k];
+    return L(`トレース表の「${txt(th)}」の列：${txt(el)}（${[...tr.parentElement.children].indexOf(tr) + 1}行目）`, `trace table, column “${txt(th)}”: ${txt(el)} (row ${[...tr.parentElement.children].indexOf(tr) + 1})`);
+  }
+  if (el.matches("#bulle")) return L("説明文：", "explanation: ") + txt(el);
+  if (el.matches("#intro")) return L("この画面の説明：", "summary: ") + txt(el);
+  return txt(el);
+}
+
+function basculerPointage(on) {
+  pointage = on;
+  document.body.classList.toggle("pointage", on);
+  $("#b-pointer").classList.toggle("plein", on);
+  $("#pointe-aide").hidden = !on;
+  $("#pointe-aide").textContent = L("説明してほしい場所をクリックしてね（Esc でやめる）", "Click the part you want explained (Esc to cancel)");
+}
+
+function contexteIA() {
+  const st = S.steps[S.cur], al = S.algo, vars = {};
+  al.vars.forEach(n => { if (st.v[n] !== undefined && st.v[n] !== "") vars[n] = st.v[n]; });
+  const donnees = st.tabs ? Object.entries(st.tabs).map(([k, t]) => `${k} = ${t.map(z => z ?? "·").join(" ")}`).join(" / ")
+    : `${al.tab || "a"} = ${st.arr.map(z => z ?? "·").join(" ")}`;
+  return { algo: `${al.jp} (${al.en})`, prog: al.prog, ligne: st.line, etape: st.msg, vars, donnees, cible: chat.cible };
+}
+
+function bulleChat(qui, texte) {
+  const d = document.createElement("div");
+  d.className = "chat-msg " + qui;
+  d.textContent = texte;
+  $("#chat-fil").appendChild(d);
+  $("#chat-fil").scrollTop = $("#chat-fil").scrollHeight;
+  return d;
+}
+
+function ouvrirChat(cible) {
+  chat.cible = cible; chat.hist = [];
+  $("#chat-nom").textContent = L("クキ先生", "Kuki-sensei");
+  $("#chat-cible").innerHTML = `${ico("doigt")}<span>${esc(cible)}</span>`;
+  $("#chat-fil").innerHTML = "";
+  bulleChat("ia", L("ここについて、なんでも聞いてね！", "Ask me anything about this part!"));
+  $("#chat-vite").innerHTML = L(["これは何をしているの？", "なぜこの値になるの？", "試験ではどう出る？"], ["What does this do?", "Why this value?", "How does it appear in the exam?"])
+    .map(q => `<button class="petit" type="button">${esc(q)}</button>`).join("");
+  $("#chat-q").placeholder = L("質問を書く…", "Type your question…");
+  $("#chat-envoyer").textContent = L("送る", "Send");
+  $("#chat-note").textContent = L("AIの答えはまちがうこともあるよ。教科書でも確かめよう。", "AI answers can be wrong: double-check with your textbook.");
+  const d = $("#d-chat"); if (!d.open) d.show();
+  $("#chat-q").focus();
+}
+
+async function demander(q) {
+  q = q.trim(); if (!q || chat.attente) return;
+  chat.attente = true; $("#chat-envoyer").disabled = true; $("#chat-q").value = "";
+  bulleChat("moi", q);
+  const attente = bulleChat("ia attente", "…");
+  let rep = "";
+  try {
+    const r = await fetch("/api/explique", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lang: LANG, question: q, contexte: contexteIA(), historique: chat.hist }) });
+    const j = await r.json().catch(() => ({}));
+    rep = r.ok && j.reply ? j.reply
+      : r.status === 429 ? L("たくさん質問してくれてありがとう！少し休んで、1時間後にまた聞いてね。", "Thanks for all the questions! Take a little break and ask again in an hour.")
+      : L("クキ先生は今お休み中…。少したってからもう一度ためしてね。", "Kuki-sensei is resting right now… please try again a bit later.");
+    if (r.ok && j.reply) chat.hist.push({ role: "user", content: q }, { role: "assistant", content: j.reply });
+  } catch {
+    rep = L("インターネットにつながっていないみたい。", "It looks like you are offline.");
+  }
+  attente.classList.remove("attente"); attente.textContent = rep;
+  $("#chat-fil").scrollTop = $("#chat-fil").scrollHeight;
+  chat.attente = false; $("#chat-envoyer").disabled = false; $("#chat-q").focus();
+}
+
+$("#b-pointer").addEventListener("click", () => basculerPointage(!pointage));
+document.addEventListener("click", e => {
+  if (!pointage || e.target.closest("#b-pointer")) return;
+  const el = e.target.closest(CIBLES);
+  if (!el) return;
+  e.preventDefault(); e.stopPropagation();
+  basculerPointage(false);
+  ouvrirChat(decrire(el));
+}, true);
+$("#chat-form").addEventListener("submit", e => { e.preventDefault(); demander($("#chat-q").value); });
+$("#chat-vite").addEventListener("click", e => { const b = e.target.closest("button"); if (b) demander(b.textContent); });
+$("#chat-fermer").addEventListener("click", () => $("#d-chat").close());
+
 /* ———————————— démarrage ———————————— */
 $("#choix").addEventListener("click", e => {
   const b = e.target.closest(".chip"); if (!b) return;
@@ -627,6 +727,8 @@ $("#ouvrir-exos").addEventListener("click", () => ouvrir("#d-exos"));
 document.querySelectorAll("[data-fermer]").forEach(b => b.addEventListener("click", fermer));
 document.querySelectorAll("dialog").forEach(d => d.addEventListener("click", e => { if (e.target === d) fermer(); }));
 document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && pointage) { basculerPointage(false); return; }
+  if (e.key === "Escape" && $("#d-chat").open) { $("#d-chat").close(); return; }
   if (e.key === "Escape" && $("#d-exos").open && !document.querySelector("#d-donnees[open]")) { $("#d-exos").close(); return; }
   if (document.querySelector("dialog[open]") || e.target.closest("input, select, textarea")) return;
   if (e.key === "ArrowRight" || e.key === " " || e.key === "Enter") {

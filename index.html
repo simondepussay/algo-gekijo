@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700&display=swap">
-<link rel="stylesheet" href="algo.css?v=26">
+<link rel="stylesheet" href="algo.css?v=27">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -58,6 +58,7 @@
         <button data-mode="deviner" class="mode" data-t="deviner"></button>
       </div>
       <button class="petit" id="ouvrir-donnees" data-t="donnees"></button>
+      <button class="petit" id="b-pointer" data-t="pointer"></button>
       <button class="petit plein" id="ouvrir-exos" data-t="exos"></button>
       <div class="modes langues" id="langues" aria-label="Language">
         <button data-lang="ja" class="mode">日本語</button>
@@ -136,10 +137,23 @@
   <div id="o-qcm" class="onglet"></div>
 </dialog>
 
-<script src="algos.js?v=26"></script>
-<script src="flow.js?v=26"></script>
-<script src="visus.js?v=26"></script>
-<script src="fete.js?v=26"></script>
-<script src="moteur.js?v=26"></script>
+<div id="pointe-aide" class="pointe-aide" hidden></div>
+<dialog id="d-chat" class="fenetre chat" aria-labelledby="chat-nom">
+  <div class="fenetre-haut">
+    <div class="chat-titre"><img src="chiens/b2.jpg" alt="" class="chat-ava" width="36" height="36"><b id="chat-nom"></b></div>
+    <button class="fermer" id="chat-fermer"><svg class="ico"><use href="#i-croix"/></svg></button>
+  </div>
+  <div id="chat-cible" class="chat-cible"></div>
+  <div id="chat-fil" class="chat-fil" aria-live="polite"></div>
+  <div id="chat-vite" class="chat-vite"></div>
+  <form id="chat-form" class="chat-form"><input id="chat-q" maxlength="400" autocomplete="off"><button class="suivant" id="chat-envoyer"></button></form>
+  <p id="chat-note" class="chat-note muted"></p>
+</dialog>
+
+<script src="algos.js?v=27"></script>
+<script src="flow.js?v=27"></script>
+<script src="visus.js?v=27"></script>
+<script src="fete.js?v=27"></script>
+<script src="moteur.js?v=27"></script>
 </body>
 </html>
