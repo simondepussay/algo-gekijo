@@ -79,10 +79,10 @@ function pluie(n = 140) {
 }
 
 /* ———————————— les amies ———————————— */
-/* les chiens de Simon (photos) — prénoms provisoires, à remplacer */
+/* les chiens de Simon (photos) : チャリ (la claire) et クキ (le roux) */
 const CHIENS = [
-  { nom: { ja: "キャラメル", en: "Caramel" }, photos: ["a1", "a2", "a3", "a4", "a5"].map(n => `chiens/${n}.jpg`) },
-  { nom: { ja: "くり", en: "Kuri" }, photos: ["b1", "b2", "b3"].map(n => `chiens/${n}.jpg`) }
+  { nom: { ja: "チャリ", en: "Chari" }, photos: ["a1", "a2", "a3", "a4", "a5"].map(n => `chiens/${n}.jpg`) },
+  { nom: { ja: "クキ", en: "Kuki" }, photos: ["b1", "b2", "b3"].map(n => `chiens/${n}.jpg`) }
 ];
 const AMIES = [
   { nom: { ja: "あかり", en: "Akari" }, cheveux: "#4a2a26", robe: "#e5484d", robe2: "#ffe1e0", noeud: "#b8202e", coiffure: "couettes", objet: "baguette" }
