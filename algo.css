@@ -430,3 +430,4 @@ table.trace { border-collapse: separate; border-spacing: 0; width: 100%; font: .
 .amie.chien .amie-bulle { margin-bottom: 70px; }
 .chien-tete { border-radius: 50%; object-fit: cover; border: 3px solid var(--ink); box-shadow: 0 0 0 3px var(--sakura); }
 @media (max-width: 760px) { .amie .chien-med { width: 96px; height: 96px; } .amie.chien .amie-bulle { margin-bottom: 50px; } }
+.intro .ordre.zero { background: var(--kin-soft); border-color: var(--kin); cursor: help; }

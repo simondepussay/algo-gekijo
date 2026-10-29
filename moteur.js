@@ -148,7 +148,9 @@ function construireChoix() {
 
 function construireIntro() {
   const al = S.algo;
-  $("#intro").innerHTML = `<span class="ordre">${L("計算量", "cost")} ${esc(al.ordre || "")}</span><span class="fr">${LANG === "en" ? esc(al.en) + " — " : ""}${esc(al.resume[LANG])}</span><b>${L("ポイント", "Key point")}</b>${esc(al.cle[LANG])}`;
+  const zero = (al.base ?? 1) === 0
+    ? `<span class="ordre zero" title="${esc(L("この本と同じく、配列の要素番号は 0 から始まる。基本情報の問題では「要素番号は 1 から始まる」と書かれていることが多いので、問題文を必ず確認しよう。", "As in the textbook, array indexes start at 0. FE exam questions often say indexes start at 1: always check the question."))}">${L("要素番号は 0 から", "indexes from 0")}</span>` : "";
+  $("#intro").innerHTML = `<span class="ordre">${L("計算量", "cost")} ${esc(al.ordre || "")}</span>${zero}<span class="fr">${LANG === "en" ? esc(al.en) + " — " : ""}${esc(al.resume[LANG])}</span><b>${L("ポイント", "Key point")}</b>${esc(al.cle[LANG])}`;
 }
 
 function construireCode() {
