@@ -30,7 +30,7 @@ const UI = {
     "t-code": '<span class="jp">擬似言語</span>', "t-vars": '<span class="jp">変数</span>', "t-arr": '<span class="jp">配列</span>',
     "t-trace": '<span class="jp">トレース表</span>', "t-cpt": '<span class="jp">回数</span>',
     aide: "<kbd>→</kbd> <kbd>Space</kbd> 進む · <kbd>←</kbd> 戻る",
-    debut: "最初から", arriere: "前のステップ (←)",
+    guide: "使い方", debut: "最初から", arriere: "前のステップ (←)",
     "o-blancs": '<span class="jp">空欄</span> · コードを完成させる', "o-qcm": '<span class="jp">確認</span> · 確認問題'
   },
   en: {
@@ -39,7 +39,7 @@ const UI = {
     "t-code": '<span class="jp">擬似言語</span> · program', "t-vars": '<span class="jp">変数</span> · variables', "t-arr": '<span class="jp">配列</span> · array',
     "t-trace": '<span class="jp">トレース表</span> · trace table', "t-cpt": '<span class="jp">回数</span> · cost',
     aide: "<kbd>→</kbd> <kbd>Space</kbd> next · <kbd>←</kbd> back",
-    debut: "Restart", arriere: "Previous step (←)",
+    guide: "How it works", debut: "Restart", arriere: "Previous step (←)",
     "o-blancs": '<span class="jp">空欄</span> · fill the blank', "o-qcm": '<span class="jp">確認</span> · quiz'
   }
 };
@@ -740,9 +740,81 @@ document.addEventListener("keydown", e => {
   } else if (e.key === "ArrowLeft") { e.preventDefault(); reculer(); }
 });
 
+/* ———————————— guide de démarrage (surimpression avec captures) ———————————— */
+const GUIDE = [
+  { ja: ["アルゴ劇場へようこそ！", "アルゴリズムが1行ずつ動くようすを、プログラム・変数・配列・トレース表で、ぜんぶ同時に見られるよ。"],
+    en: ["Welcome to Algo Theater!", "Watch an algorithm run line by line: the program, the variables, the array and the trace table all move together."] },
+  { ja: ["分野とアルゴリズムを選ぶ", "上で分野（探索・整列・データ構造・木）とアルゴリズムを選ぶ。黄色い帯に、何をするアルゴリズムか、ポイント、計算量が書いてある。"],
+    en: ["Pick a topic and an algorithm", "At the top, choose a topic (search, sorting, data structures, trees) and an algorithm. The yellow strip says what it does, the key point and its cost."] },
+  { ja: ["擬似言語と流れ図", "左がプログラム。「擬似言語」と「流れ図」を切り替えられる。行番号は同じで、今の行・今の箱が赤く光る。"],
+    en: ["Pseudocode and flowchart", "The program is on the left. Switch between pseudocode and flowchart: the line numbers are the same, and the current line or box glows red."] },
+  { ja: ["1ステップずつ進める", "「次へ」（→ キーやスペースでも）で1ステップ進む。変数の箱、配列、トレース表がいっしょに動く。◀ で戻れる。"],
+    en: ["One step at a time", "“Next step” (or →, Space) moves one step. The variable boxes, the array and the trace table move together. ◀ goes back."] },
+  { ja: ["予想してから実行", "「予想する」モードでは、大事な行の前に「次はどうなる？」と聞かれる。答えてから実行。チャリとクキとあかりが応援してくれるよ。"],
+    en: ["Guess before it runs", "In Predict mode, you are asked “what happens next?” before each key line, then the line runs. Chari, Kuki and Akari cheer you on."] },
+  { ja: ["練習とデータ", "「練習」で空欄（コードを完成させる）と確認問題。プログラムは左に見えたまま。「データ」で配列や操作を変えて、もう一度ためせる。"],
+    en: ["Practice and data", "“Practice” opens fill-the-blank and quiz questions, with the program still visible on the left. “Data” lets you change the array or the operations and try again."] },
+  { ja: ["わからないときは「質問」", "「質問」を押して、わからない場所（行、箱、変数、配列のマス…）をクリック。AIのクキ先生が、その場所を説明してくれる。"],
+    en: ["Stuck? Press “Ask”", "Press “Ask”, then click the part you don’t get (a line, a box, a variable, an array cell…). Kuki-sensei, the AI, explains that exact part."] }
+];
+let guidePage = 0;
+function majGuide() {
+  const g = GUIDE[guidePage][LANG], n = GUIDE.length;
+  $("#guide-img").src = `guide/${LANG}-${guidePage + 1}.jpg`;
+  $("#guide-num").textContent = `${guidePage + 1} / ${n}`;
+  $("#guide-titre").textContent = g[0];
+  $("#guide-p").textContent = g[1];
+  $("#guide-prec").textContent = L("◀ 前へ", "◀ Back");
+  $("#guide-prec").disabled = guidePage === 0;
+  $("#guide-suiv").textContent = guidePage === n - 1 ? L("はじめる！", "Let’s go!") : L("次へ ▶", "Next ▶");
+  $("#guide-points").innerHTML = GUIDE.map((_, k) => `<button class="${k === guidePage ? "actif" : ""}" data-k="${k}" aria-label="${k + 1}"></button>`).join("");
+}
+function ouvrirGuide() { guidePage = 0; majGuide(); $("#guide").hidden = false; $("#guide-suiv").focus(); }
+function fermerGuide() { $("#guide").hidden = true; ecrire(CLE + "-guide", 1); }
+$("#b-guide").addEventListener("click", ouvrirGuide);
+$("#guide-fermer").addEventListener("click", fermerGuide);
+$("#guide-prec").addEventListener("click", () => { if (guidePage > 0) { guidePage--; majGuide(); } });
+$("#guide-suiv").addEventListener("click", () => { if (guidePage < GUIDE.length - 1) { guidePage++; majGuide(); } else fermerGuide(); });
+$("#guide-points").addEventListener("click", e => { const b = e.target.closest("button"); if (b) { guidePage = +b.dataset.k; majGuide(); } });
+$("#guide").addEventListener("click", e => { if (e.target.id === "guide") fermerGuide(); });
+document.addEventListener("keydown", e => {
+  if ($("#guide").hidden) return;
+  e.stopImmediatePropagation();
+  if (e.key === "Escape") fermerGuide();
+  else if (e.key === "ArrowRight") $("#guide-suiv").click();
+  else if (e.key === "ArrowLeft") $("#guide-prec").click();
+}, true);
+
+/* ———————————— mode démo (pour les captures du guide) : #demo&algo=…&vue=…&etape=…&mode=…&question=1&ouvrir=exos&onglet=qcm&chat=5&pointer=1 ———————————— */
+function demo(p) {
+  document.body.classList.add("demo");
+  if (p.get("lang")) { LANG = p.get("lang"); appliquerTextes(); }
+  const al = ALGOS.find(a => a.id === p.get("algo")) || ALGOS[0];
+  charger(al, al.donnees);
+  S.vue = p.get("vue") || "ps"; appliquerVue();
+  choisirMode(p.get("mode") || "voir");
+  aller(+(p.get("etape") || 0));
+  if (p.get("question")) { const k = S.steps.findIndex((st, i) => i > S.cur && st.q); if (k > 0) { S.attente = k; S.retour = null; maj(); } }
+  if (p.get("ouvrir")) { choisirOnglet(p.get("onglet") || "blancs"); ouvrir("#d-" + p.get("ouvrir")); }
+  if (p.get("pointer")) { basculerPointage(true); document.querySelector(`#code li[data-l="${p.get("pointer")}"]`)?.classList.add("survol"); }
+  if (p.get("chat")) {
+    const li = document.querySelector(`#code li[data-l="${p.get("chat")}"]`);
+    ouvrirChat(decrire(li));
+    bulleChat("moi", L("なぜこの値になるの？", "Why this value?"));
+    bulleChat("ia", L("実行前は T[1] = 81、MAX = 53 なので、81 > 53 は真。だから6行目が実行されて、MAX は 81 に更新されるよ。\n試験ポイント：最初に T[0] を入れておき、残りを順に比べるパターン！ワン！",
+      "Before the line, T[1] = 81 and MAX = 53, so 81 > 53 is true. Line 6 runs and MAX becomes 81.\nExam tip: start with T[0], then compare the rest one by one! Woof!"));
+  }
+}
+
 appliquerTextes();
-const dernier = ALGOS.find(a => a.id === lire(CLE + "-dernier", "")) || ALGOS[0];
-charger(dernier, dernier.donnees);
-choisirMode("voir");
-choisirOnglet("blancs");
+const parDemo = location.hash.startsWith("#demo") ? new URLSearchParams(location.hash.slice(1)) : null;
+if (parDemo) demo(parDemo);
+else {
+  const dernier = ALGOS.find(a => a.id === lire(CLE + "-dernier", "")) || ALGOS[0];
+  charger(dernier, dernier.donnees);
+  choisirMode("voir");
+  choisirOnglet("blancs");
+  /* première visite sur un grand écran : le guide s'ouvre tout seul */
+  if (!lire(CLE + "-guide", 0) && !window.matchMedia("(max-width: 899px), (max-height: 539px)").matches) ouvrirGuide();
+}
 })();

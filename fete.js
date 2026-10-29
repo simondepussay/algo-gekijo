@@ -67,12 +67,12 @@ function boucle() {
 
 /* petite gerbe depuis un élément · grande pluie depuis le haut */
 function confettis(el, n = 36) {
-  if (calme) return;
+  if (calme || document.body.classList.contains("demo")) return;
   const r = el ? el.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 2, width: 0, height: 0 };
   ajouter(r.left + r.width / 2, r.top + r.height / 2, n, 9);
 }
 function pluie(n = 140) {
-  if (calme) return;
+  if (calme || document.body.classList.contains("demo")) return;
   for (let k = 0; k < 6; k++) setTimeout(() => {
     for (let j = 0; j < n / 6; j++) ajouter(Math.random() * innerWidth, -10, 1, 3, true);
   }, k * 120);
@@ -219,6 +219,7 @@ function choisir(arr, cle) {
 
 /* type : "erreur" | "focus" | "serie" | "fin" · lang : "ja" | "en" */
 function amie(type, lang) {
+  if (document.body.classList.contains("demo")) return false;
   if (calme && type === "focus") return false;
   if (visible && !visible.isConnected) { clearInterval(visible._frames); clearTimeout(visible._depart); visible = null; }
   if (visible) {

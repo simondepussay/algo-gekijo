@@ -454,3 +454,28 @@ body.pointage :is(#flux .fn, .arb-n):hover { filter: drop-shadow(0 0 4px var(--s
 .chat-form input { flex: 1; min-width: 0; border: 2px solid var(--ink); border-radius: 999px; background: var(--paper); padding: 6px 12px; }
 .chat-form .suivant { height: 38px; padding: 0 16px; font-size: .9rem; }
 .chat-note { font-size: .72rem; margin: 0; text-align: center; }
+
+/* — bouton « ? » et guide de démarrage — */
+.aide-btn { width: 32px; height: 32px; font: 700 1rem var(--maru); background: var(--sakura); color: #fff; }
+.guide { position: fixed; inset: 0; z-index: 75; display: grid; place-items: center; padding: 20px;
+  background: color-mix(in srgb, var(--ink) 45%, transparent); }
+.guide[hidden] { display: none; }
+.guide-carte { position: relative; width: min(860px, 100%); max-height: calc(100dvh - 40px); overflow: auto; background: var(--sheet); border: 2px solid var(--ink); border-radius: 24px; box-shadow: 8px 8px 0 var(--ink); padding: 18px 20px; display: grid; gap: 12px; animation: pop .35s cubic-bezier(.3, 1.6, .5, 1); }
+.guide-fermer { position: absolute; top: 12px; right: 12px; z-index: 2; }
+.guide-image { border: 2px solid var(--ink); border-radius: 16px; overflow: hidden; background: var(--paper); aspect-ratio: 16 / 9; display: grid; place-items: center; }
+.guide-image img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.guide-num { font: 700 .75rem var(--mono); color: var(--shu); }
+.guide-texte h2 { font: 700 1.35rem var(--jp); margin: 2px 0 6px; }
+.guide-texte p { margin: 0; line-height: 1.7; }
+.guide-bas { display: flex; align-items: center; gap: 12px; }
+.guide-bas .suivant { margin-left: auto; }
+.guide-points { display: flex; gap: 6px; margin: 0 auto; }
+.guide-points button { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--ink); background: var(--sheet); padding: 0; }
+.guide-points button.actif { background: var(--shu); border-color: var(--shu); }
+
+/* — mode démo (captures) — */
+body.demo .amie, body.demo #confettis { display: none !important; }
+body.pointage #code li.survol { outline: 3px dashed var(--shu); outline-offset: 2px; border-radius: 8px; }
+.guide-image { aspect-ratio: auto; height: min(50vh, 460px); }
+.guide-image img { width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; }
+.guide-image { display: flex; align-items: center; justify-content: center; }
