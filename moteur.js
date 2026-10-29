@@ -797,6 +797,7 @@ function demo(p) {
   if (p.get("question")) { const k = S.steps.findIndex((st, i) => i > S.cur && st.q); if (k > 0) { S.attente = k; S.retour = null; maj(); } }
   if (p.get("ouvrir")) { choisirOnglet(p.get("onglet") || "blancs"); ouvrir("#d-" + p.get("ouvrir")); }
   if (p.get("pointer")) { basculerPointage(true); document.querySelector(`#code li[data-l="${p.get("pointer")}"]`)?.classList.add("survol"); }
+  if (p.get("repere")) document.getElementById(p.get("repere"))?.classList.add("repere");
   if (p.get("chat")) {
     const li = document.querySelector(`#code li[data-l="${p.get("chat")}"]`);
     ouvrirChat(decrire(li));

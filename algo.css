@@ -479,3 +479,4 @@ body.pointage #code li.survol { outline: 3px dashed var(--shu); outline-offset: 
 .guide-image { aspect-ratio: auto; height: min(50vh, 460px); }
 .guide-image img { width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; }
 .guide-image { display: flex; align-items: center; justify-content: center; }
+body.demo .repere { outline: 4px solid var(--shu); outline-offset: 4px; box-shadow: 0 0 0 12px color-mix(in srgb, var(--shu) 25%, transparent); position: relative; z-index: 2; }
