@@ -80,10 +80,7 @@ function pluie(n = 140) {
 
 /* ———————————— les amies ———————————— */
 const AMIES = [
-  { nom: { ja: "ももか", en: "Momoka" }, cheveux: "#7a4a3a", robe: "#f6a9c2", robe2: "#fde3ec", noeud: "#f38ba8", coiffure: "couettes", objet: "baguette" },
-  { nom: { ja: "そら", en: "Sora" }, cheveux: "#3b3340", robe: "#a8cdf2", robe2: "#e6f2fd", noeud: "#7fb2e8", coiffure: "longs", objet: "coeur" },
-  { nom: { ja: "すみれ", en: "Sumire" }, cheveux: "#a2553e", robe: "#c9b2ef", robe2: "#f1eafc", noeud: "#a68be0", coiffure: "couettes", objet: "etoile" },
-  { nom: { ja: "みんと", en: "Minto" }, cheveux: "#5b4636", robe: "#a6dcc6", robe2: "#e5f6ef", noeud: "#f9c6d6", coiffure: "chignons", objet: "eventail" }
+  { nom: { ja: "あかり", en: "Akari" }, cheveux: "#4a2a26", robe: "#e5484d", robe2: "#ffe1e0", noeud: "#b8202e", coiffure: "couettes", objet: "baguette" }
 ];
 
 function dessin(a) {
@@ -228,7 +225,7 @@ function amie(type, lang) {
   const now = Date.now();
   if (type === "focus" && now - dernier < 6000) return false;
   dernier = now;
-  let k; do { k = Math.floor(Math.random() * AMIES.length); } while (k === derniereAmie);
+  let k; do { k = Math.floor(Math.random() * AMIES.length); } while (AMIES.length > 1 && k === derniereAmie);
   derniereAmie = k;
   const a = AMIES[k], p = choisir(PHRASES[type], type);
   cote = 1;   /* toujours à droite : à gauche, elle cacherait le programme */
